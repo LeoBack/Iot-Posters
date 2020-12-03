@@ -5,7 +5,7 @@ Basado en NodeMCU ESP8266 utilizando Arduino.
 Se aloja un servidor web donde conociendo la IP que el router le asigno al dispositivo accedes a la página web donde se configura las tareas a ejecutar.
 
 # Configuracion Inicial
-Paso 1 - Cuando arranca el ESP8266 los primeros 10 segundos indicados por el parpadeo de un led para presionar un pulsador para que ingrese en modo Access Point con la IP 192.168.1.4 (en el navegador web) donde configuramos la Red wifi que se debe conectar. Presionamos en guardar el dispositivo se reinicia y repite el proceso, Pasados los 10 segundos se conecta a la red wifi previamente configurada. 
+Paso 1 - Cuando arranca el ESP8266 los primeros 10 segundos indicados por el parpadeo de un led para presionar un pulsador para que ingrese en modo Access Point con la IP 192.168.4.1 (en el navegador web) donde configuramos la Red wifi que se debe conectar. Presionamos en guardar el dispositivo se reinicia y repite el proceso, Pasados los 10 segundos se conecta a la red wifi previamente configurada. 
 
 Paso 2 - Buscamos en la red la ip que el router le asigno y accedemos a la página principal.
 
