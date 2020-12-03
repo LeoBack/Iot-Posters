@@ -1,0 +1,39 @@
+WiFi - Help
+set   	 - Establece SSID y Password de uana red wifi seleccionada.
+reload	 - Lee configuracion de los datos de wifi almacenado.
+scan  	 - Escaner de redes wifi.
+help  	 - Manual de intrucciones.
+
+SPIFFS - Help
+format	 - Fomatea el espacio de almacenamiento.
+info  	 - Informa el estado del espacio de alamacenamiento.
+check 	 - Verifica se existe/n un/los archivo/s.
+tree  	 - Devuelve la estructura de archivos.
+help  	 - Manual de intrucciones.
+
+Color - Help
+set 	 - Establece color. RGB Ej: 0,0,0 o 255,100,100
+get 	 - Devuelve el color actual.
+help	 - Manual de intrucciones.
+
+
+RTC - Help
+setDatetime	 - Establece fecha y hora.
+		 - Formato: SET_ALL,AAAA,MM,DD,HH,mm,SS
+		 - Formato: SET_DATE,AAAA,MM,DD
+		 - Formato: SET_TIME,HH,mm,SS
+getDatetime	 - Devuelve fecha y hora.
+getDate    	 - Devuelve fecha
+getTime    	 - Devuelve hora
+getTemp    	 - Devuelve temperatura
+help       	 - Manual de intrucciones.
+
+
+(command == BLINK | command == "1")
+(command == EVEN_OR_ODD | command == "2")
+(command == MOBILE_POINT | command == "3")
+(command == MOBILE_HOLLOW | command == "4")
+(command == POSITIVE_LADDER | command == "5")
+(command == NEGATIVE_LADDER | command == "6")
+(command == ON | command == "7")
+(command == OFF | command == "8")

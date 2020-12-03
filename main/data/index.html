@@ -1,0 +1,528 @@
+﻿<!DOCTYPE html>
+<html class="no-js" lang="">
+
+<head>
+    <title>Control Panel IoT</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="vendor/google-fonts.css" />
+    <link rel="stylesheet" href="css/material.min.css" />
+    <script type="text/javascript" src="./js/main.js"></script>
+</head>
+
+<body onload="main_onload()">
+
+    <!-- Always shows a header, even in smaller screens. -->
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+        <header class="mdl-layout__header">
+            <div class="mdl-layout__header-row">
+                <!-- Title -->
+                <span class="mdl-layout-title">Web Panel</span>
+                <!-- Add spacer, to align navigation to the right -->
+                <div class="mdl-layout-spacer" id="title_status">
+                    <span class="mdl-layout__title" id="status">-[#]</span>
+                </div>
+                <!-- Navigation. We hide it in small screens. -->
+                <!--
+                <nav class="mdl-navigation mdl-layout--large-screen-only">
+                    <a class="mdl-navigation__link" href="#" onclick="main_onload()">Refrescar</a>
+                    <a class="mdl-navigation__link" href="#" onclick="set_clock()">Sincronizar reloj</a>
+                </nav>
+                -->
+            </div>
+        </header>
+
+        <div class="mdl-layout__drawer">
+            <span class="mdl-layout-title">Tareas</span>
+            <style>
+                .demo-list-two {
+                    width: 300px;
+                }
+            </style>
+            <ul class="demo-list-two mdl-list" id="menu"></ul>
+
+            <nav class="mdl-navigation">
+                <!--
+                <a class="mdl-navigation__link">
+                    <spam class="mdl-layout-title" >Fecha: xx/xx/xxxx</spam>
+                    <spam class="mdl-layout-title" >Hora: xx:xx:xx</spam>
+                    <spam class="mdl-layout-title">Ejecutando: now_nametask</spam>
+                </a>
+                -->
+                <a class="mdl-navigation__link" href="#" onclick="main_onload()">Recargar</a>
+                <!--<a class="mdl-navigation__link" href="#" onclick="set_std()">Ver tareas</a>
+                <a class="mdl-navigation__link" href="#" onclick="set_std()">Habilita tareas</a>-->
+                <a class="mdl-navigation__link" href="#" onclick="set_clock()">Sincronizar reloj</a>
+                <a class="mdl-navigation__link" href="#" onclick="set_std_status()">On/Off</a>
+                <a class="mdl-navigation__link" href="#" onclick="set_test()">TEST</a>
+            </nav>
+        </div>
+
+        <!-- Detalles -->
+        <div class="mdl-grid mdl-shadow--2dp">
+            <div class="mdl-cell mdl-cell--2-col mdl-shadow--2dp">
+                <h6>Encabezado</h6>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input class="mdl-textfield__input" type="text" id="sec_name">
+                    <label class="mdl-textfield__label" for="sec_name">Nombre</label>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input class="mdl-textfield__input" type="text" id="sec_iniDate"
+                        pattern="^(?:3[01]|[12][0-9]|0?[1-9])([\-/.])(0?[1-9]|1[1-2])\1\d{4}$">
+                    <label class="mdl-textfield__label" for="sec_iniDate">Fecha de inicio</label>
+                    <span class="mdl-textfield__error">¡La entrada no es valida!</span>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input class="mdl-textfield__input" type="text" id="sec_iniTime"
+                        pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$">
+                    <label class="mdl-textfield__label" for="sec_iniTime">Hora de inicio</label>
+                    <span class="mdl-textfield__error">¡La entrada no es valida!</span>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input class="mdl-textfield__input" type="text" id="sec_endDate"
+                        pattern="^(?:3[01]|[12][0-9]|0?[1-9])([\-/.])(0?[1-9]|1[1-2])\1\d{4}$">
+                    <label class="mdl-textfield__label" for="sec_endDate">Fecha de fin</label>
+                    <span class="mdl-textfield__error">¡La entrada no es valida!</span>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input class="mdl-textfield__input" type="text" id="sec_endTime"
+                        pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$">
+                    <label class="mdl-textfield__label" for="sec_endTime">Hora de fin</label>
+                    <span class="mdl-textfield__error">¡La entrada no es valida!</span>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="sec_enable">
+                        <input type="checkbox" id="sec_enable" class="mdl-switch__input">
+                        <span class="mdl-switch__label">Habilitado</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="mdl-cell mdl-cell--2-col mdl-shadow--2dp">
+                <h6>Secuencia 1</h6>
+                <ul class="mdl-list">
+                    <li class="mdl-list__item">
+                        <div>
+                            <span class="">Color</span>
+                            <input type="color" id="sec1_color">
+                        </div>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec1_option-0">
+                            <input type="radio" id="sec1_option-0" class="mdl-radio__button" name="sec1_options"
+                                value="0" checked>
+                            <span class="mdl-radio__label">Desactivado</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec1_option-1">
+                            <input type="radio" id="sec1_option-1" class="mdl-radio__button" name="sec1_options"
+                                value="1">
+                            <span class="mdl-radio__label">Punto movil</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec1_option-2">
+                            <input type="radio" id="sec1_option-2" class="mdl-radio__button" name="sec1_options"
+                                value="2">
+                            <span class="mdl-radio__label">Hueco movil</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec1_option-3">
+                            <input type="radio" id="sec1_option-3" class="mdl-radio__button" name="sec1_options"
+                                value="3">
+                            <span class="mdl-radio__label">Escalera Positiva</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec1_option-4">
+                            <input type="radio" id="sec1_option-4" class="mdl-radio__button" name="sec1_options"
+                                value="4">
+                            <span class="mdl-radio__label">Escalera Negativa</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec1_option-5">
+                            <input type="radio" id="sec1_option-5" class="mdl-radio__button" name="sec1_options"
+                                value="5">
+                            <span class="mdl-radio__label">Parpadear</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec1_option-6">
+                            <input type="radio" id="sec1_option-6" class="mdl-radio__button" name="sec1_options"
+                                value="6">
+                            <span class="mdl-radio__label">Alternar par/impar</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec1_option-7">
+                            <input type="radio" id="sec1_option-7" class="mdl-radio__button" name="sec1_options"
+                                value="7">
+                            <span class="mdl-radio__label">Encendido</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec1_option-8">
+                            <input type="radio" id="sec1_option-8" class="mdl-radio__button" name="sec1_options"
+                                value="8">
+                            <span class="mdl-radio__label">Apagado</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="sec1_invert">
+                            <input type="checkbox" id="sec1_invert" class="mdl-switch__input">
+                            <span class="mdl-switch__label">Invertir secuencia</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                            <input class="mdl-textfield__input" type="text" id="sec1_repeat" value="1"
+                                pattern="-?[0-9]*(\.[0-9]+)?">
+                            <label class="mdl-textfield__label" for="sec1_repeat">Repetir (n)
+                                veces</label>
+                            <span class="mdl-textfield__error">La entrada no es un número!</span>
+                        </div>
+                    </li>
+                    <li class="mdl-list__item">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                            <input class="mdl-textfield__input" type="text" id="sec1_time" value="100"
+                                pattern="-?[0-9]*(\.[0-9]+)?">
+                            <label class="mdl-textfield__label" for="sec1_time">Tiempo
+                                (ms)</label>
+                            <span class="mdl-textfield__error">La entrada no es un número!</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="mdl-cell mdl-cell--2-col mdl-shadow--2dp">
+                <h6>Secuencia 2</h6>
+                <ul class="mdl-list">
+                    <li class="mdl-list__item">
+                        <div>
+                            <span class="">Color</span>
+                            <input type="color" id="sec1_color">
+                        </div>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec2_option-0">
+                            <input type="radio" id="sec2_option-0" class="mdl-radio__button" name="sec2_options"
+                                value="0" checked>
+                            <span class="mdl-radio__label">Desactivado</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec2_option-1">
+                            <input type="radio" id="sec2_option-1" class="mdl-radio__button" name="sec2_options"
+                                value="1">
+                            <span class="mdl-radio__label">Punto movil</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec2_option-2">
+                            <input type="radio" id="sec2_option-2" class="mdl-radio__button" name="sec2_options"
+                                value="2">
+                            <span class="mdl-radio__label">Hueco movil</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec2_option-3">
+                            <input type="radio" id="sec2_option-3" class="mdl-radio__button" name="sec2_options"
+                                value="3">
+                            <span class="mdl-radio__label">Escalera Positiva</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec2_option-4">
+                            <input type="radio" id="sec2_option-4" class="mdl-radio__button" name="sec2_options"
+                                value="4">
+                            <span class="mdl-radio__label">Escalera Negativa</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec2_option-5">
+                            <input type="radio" id="sec2_option-5" class="mdl-radio__button" name="sec2_options"
+                                value="5">
+                            <span class="mdl-radio__label">Parpadear</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec2_option-6">
+                            <input type="radio" id="sec2_option-6" class="mdl-radio__button" name="sec2_options"
+                                value="6">
+                            <span class="mdl-radio__label">Alternar par/impar</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec2_option-7">
+                            <input type="radio" id="sec2_option-7" class="mdl-radio__button" name="sec2_options"
+                                value="7">
+                            <span class="mdl-radio__label">Encendido</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec2_option-8">
+                            <input type="radio" id="sec2_option-8" class="mdl-radio__button" name="sec2_options"
+                                value="8">
+                            <span class="mdl-radio__label">Apagado</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="sec2_invert">
+                            <input type="checkbox" id="sec2_invert" class="mdl-switch__input">
+                            <span class="mdl-switch__label">Invertir secuencia</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                            <input class="mdl-textfield__input" type="text" id="sec2_repeat" value="1"
+                                pattern="-?[0-9]*(\.[0-9]+)?">
+                            <label class="mdl-textfield__label" for="sec2_repeat">Repetir (n)
+                                veces</label>
+                            <span class="mdl-textfield__error">La entrada no es un número!</span>
+                        </div>
+                    </li>
+                    <li class="mdl-list__item">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                            <input class="mdl-textfield__input" type="text" id="sec2_time" value="100"
+                                pattern="-?[0-9]*(\.[0-9]+)?">
+                            <label class="mdl-textfield__label" for="sec2_time">Tiempo
+                                (ms)</label>
+                            <span class="mdl-textfield__error">La entrada no es un número!</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="mdl-cell mdl-cell--2-col mdl-shadow--2dp">
+                <h6>Secuencia 3</h6>
+                <ul class="mdl-list">
+                    <li class="mdl-list__item">
+                        <div>
+                            <span class="">Color</span>
+                            <input type="color" id="sec1_color">
+                        </div>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec3_option-0">
+                            <input type="radio" id="sec3_option-0" class="mdl-radio__button" name="sec3_options"
+                                value="0" checked>
+                            <span class="mdl-radio__label">Desactivado</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec3_option-1">
+                            <input type="radio" id="sec3_option-1" class="mdl-radio__button" name="sec3_options"
+                                value="1">
+                            <span class="mdl-radio__label">Punto movil</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec3_option-2">
+                            <input type="radio" id="sec3_option-2" class="mdl-radio__button" name="sec3_options"
+                                value="2">
+                            <span class="mdl-radio__label">Hueco movil</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec3_option-3">
+                            <input type="radio" id="sec3_option-3" class="mdl-radio__button" name="sec3_options"
+                                value="3">
+                            <span class="mdl-radio__label">Escalera Positiva</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec3_option-4">
+                            <input type="radio" id="sec3_option-4" class="mdl-radio__button" name="sec3_options"
+                                value="4">
+                            <span class="mdl-radio__label">Escalera Negativa</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec3_option-5">
+                            <input type="radio" id="sec3_option-5" class="mdl-radio__button" name="sec3_options"
+                                value="5">
+                            <span class="mdl-radio__label">Parpadear</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec3_option-6">
+                            <input type="radio" id="sec3_option-6" class="mdl-radio__button" name="sec3_options"
+                                value="6">
+                            <span class="mdl-radio__label">Alternar par/impar</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec3_option-7">
+                            <input type="radio" id="sec3_option-7" class="mdl-radio__button" name="sec3_options"
+                                value="7">
+                            <span class="mdl-radio__label">Encendido</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec3_option-8">
+                            <input type="radio" id="sec3_option-8" class="mdl-radio__button" name="sec3_options"
+                                value="8">
+                            <span class="mdl-radio__label">Apagado</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="sec3_invert">
+                            <input type="checkbox" id="sec3_invert" class="mdl-switch__input">
+                            <span class="mdl-switch__label">Invertir secuencia</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                            <input class="mdl-textfield__input" type="text" id="sec3_repeat" value="1"
+                                pattern="-?[0-9]*(\.[0-9]+)?">
+                            <label class="mdl-textfield__label" for="sec3_repeat">Repetir (n)
+                                veces</label>
+                            <span class="mdl-textfield__error">La entrada no es un número!</span>
+                        </div>
+                    </li>
+                    <li class="mdl-list__item">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                            <input class="mdl-textfield__input" type="text" id="sec13_time" value="100"
+                                pattern="-?[0-9]*(\.[0-9]+)?">
+                            <label class="mdl-textfield__label" for="sec3_time">Tiempo
+                                (ms)</label>
+                            <span class="mdl-textfield__error">La entrada no es un número!</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="mdl-cell mdl-cell--2-col mdl-shadow--2dp">
+                <h6>Secuencia 4</h6>
+                <ul class="mdl-list">
+                    <li class="mdl-list__item">
+                        <div>
+                            <span class="">Color</span>
+                            <input type="color" id="sec1_color">
+                        </div>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec4_option-0">
+                            <input type="radio" id="sec4_option-0" class="mdl-radio__button" name="sec4_options"
+                                value="0" checked>
+                            <span class="mdl-radio__label">Desactivado</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec4_option-1">
+                            <input type="radio" id="sec4_option-1" class="mdl-radio__button" name="sec4_options"
+                                value="1">
+                            <span class="mdl-radio__label">Punto movil</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec4_option-2">
+                            <input type="radio" id="sec4_option-2" class="mdl-radio__button" name="sec4_options"
+                                value="2">
+                            <span class="mdl-radio__label">Hueco movil</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec4_option-3">
+                            <input type="radio" id="sec4_option-3" class="mdl-radio__button" name="sec4_options"
+                                value="3">
+                            <span class="mdl-radio__label">Escalera Positiva</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec4_option-4">
+                            <input type="radio" id="sec4_option-4" class="mdl-radio__button" name="sec4_options"
+                                value="4">
+                            <span class="mdl-radio__label">Escalera Negativa</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec4_option-5">
+                            <input type="radio" id="sec4_option-5" class="mdl-radio__button" name="sec4_options"
+                                value="5">
+                            <span class="mdl-radio__label">Parpadear</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec4_option-6">
+                            <input type="radio" id="sec4_option-6" class="mdl-radio__button" name="sec4_options"
+                                value="6">
+                            <span class="mdl-radio__label">Alternar par/impar</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec4_option-7">
+                            <input type="radio" id="sec4_option-7" class="mdl-radio__button" name="sec4_options"
+                                value="7">
+                            <span class="mdl-radio__label">Encendido</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="sec4_option-8">
+                            <input type="radio" id="sec4_option-8" class="mdl-radio__button" name="sec4_options"
+                                value="8">
+                            <span class="mdl-radio__label">Apagado</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="sec4_invert">
+                            <input type="checkbox" id="sec4_invert" class="mdl-switch__input">
+                            <span class="mdl-switch__label">Invertir secuencia</span>
+                        </label>
+                    </li>
+                    <li class="mdl-list__item">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                            <input class="mdl-textfield__input" type="text" id="sec4_repeat" value="1"
+                                pattern="-?[0-9]*(\.[0-9]+)?">
+                            <label class="mdl-textfield__label" for="sec4_repeat">Repetir (n)
+                                veces</label>
+                            <span class="mdl-textfield__error">La entrada no es un número!</span>
+                        </div>
+                    </li>
+                    <li class="mdl-list__item">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                            <input class="mdl-textfield__input" type="text" id="sec4_time" value="100"
+                                pattern="-?[0-9]*(\.[0-9]+)?">
+                            <label class="mdl-textfield__label" for="sec4_time">Tiempo
+                                (ms)</label>
+                            <span class="mdl-textfield__error">La entrada no es un número!</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="mdl-cell mdl-cell--10-col">
+                <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored"
+                    onclick="addTable()">Guardar</button>
+                <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">Descartar</button>
+            </div>
+        </div>
+
+        <footer class="mdl-mega-footer">
+            <div class="mdl-mega-footer__middle-section">
+                <div class="mdl-mega-footer__drop-down-section">
+                    <input class="mdl-mega-footer__heading-checkbox" type="checkbox" checked>
+                    <h1 class="mdl-mega-footer__heading">Features</h1>
+                    <ul class="mdl-mega-footer__link-list">
+                        <li><a href="http://www.graficadsrl.com/">Graficad</a></li>
+                        <li>Desarrollado 2020</li>
+                        <li><a href="#">Partners</a></li>
+                        <li><a href="#">Updates</a></li>
+                    </ul>
+                </div>
+            </div>
+        </footer>
+    </div>
+    </main>
+    </div>
+</body>
+
+
+<script type="text/javascript" src="vendor/material.js"></script>
+
+</html>

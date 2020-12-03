@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html class="no-js" lang="">
+
+<head>
+    <title>Initial setup</title>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg" href="settings-black-18dp.svg" />
+    <link rel="stylesheet" href="vendor/google-fonts.css">
+    <link rel="stylesheet" href="css/material.min.css">
+</head>
+
+<body>
+    <div class="mdl-grid">
+        <div class="mdl-cell mdl-cell--12-col">
+            <ul class="demo-list-icon mdl-list">
+                <li class="mdl-list__item">
+                    <span class="mdl-list__item-primary-content">
+                        <i class="material-icons mdl-list__item-icon">wifi</i>
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                            <input class="mdl-textfield__input" type="text" id="ssid">
+                            <label class="mdl-textfield__label" for="ssid">SSID</label>
+                        </div>
+                    </span>
+                </li>
+                <li class="mdl-list__item">
+                    <span class="mdl-list__item-primary-content">
+                        <i class="material-icons mdl-list__item-icon">vpn_key</i>
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                            <input class="mdl-textfield__input" type="text" id="pwd">
+                            <label class="mdl-textfield__label" for="pwd">PASSWORD</label>
+                        </div>
+                    </span>
+                </li>
+                <li class="mdl-list__item">
+                    <button class="mdl-button mdl-js-button mdl-button--raised" id="show-toast"
+                        onclick="save_ssid()">Guardar</button>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <!--
+    <div class="mdl-grid">
+        <div class="mdl-cell mdl-cell--5-col">
+            <ul class="demo-list-icon mdl-list">
+                <li class="mdl-list__item">
+                    <span class="mdl-list__item-primary-content" id="title_wifi">
+                        Wi-Fi networks detected
+                    </span>
+                </li>
+                <li class="mdl-list__item" id="dtSSID"></li>
+                <li class="mdl-list__item">
+                    <button class="mdl-button mdl-js-button mdl-button--raised"
+                        onclick="refresh_table_wifis()">Refrescar</button>
+                </li>
+        </div>
+    </div>
+
+
+    <div id="demo-toast-example" class="mdl-js-snackbar mdl-snackbar">
+        <div class="mdl-snackbar__text"></div>
+        <button class="mdl-snackbar__action" type="button">A</button>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+            var snackbarContainer = document.querySelector('#demo-toast-example');
+            var showToastButton = document.querySelector('#show-toast');
+            showToastButton.addEventListener('click', function () {
+                'use strict';
+                var data = { message: 'Aplicando configuracion'};
+                snackbarContainer.MaterialSnackbar.showSnackbar(data);
+            });
+        }());
+    </script>
+-->
+</body>
+<script type="text/javascript" src="./js/main.js"></script>
+<script type="text/javascript" src="vendor/material.js"></script>
+
+</html>
