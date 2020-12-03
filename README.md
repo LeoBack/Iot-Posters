@@ -22,4 +22,7 @@ Las tareas consisten en:
 ⋅⋅4. Numero de repeticiones antes de pasar a la siguiete secuencia.
 ⋅⋅5. Tiempo de cada segmento antes de pasar al siguiente.
   
-  
+#Mas info
+
+Comunicacion entre el Servidor y Cliente mediante Web Socket usando JSON.
+Interfaz estilo web [Material Desing Lite](https://getmdl.io/)
