@@ -70,7 +70,7 @@ void libColor::println() {
   }
 
   if (DEBUG) {
-    Serial.print("#2 RGB= "); Serial.println(Rgb);
+    Serial.print("#2 RGB: "); Serial.println(Rgb);
   }
 }
 

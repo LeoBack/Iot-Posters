@@ -1,10 +1,9 @@
+#include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
 //#include <ESP8266mDNS_Legacy.h>
 //#include <LEAmDNS.h>
 //#include <LEAmDNS_lwIPdefs.h>
 //#include <LEAmDNS_Priv.h>
-
-#include <ESP8266WiFi.h>
-//#include <ESP8266mDNS.h>
 #include <ESPAsyncWebServer.h>
 #include <ListLib.h>
 #include <FS.h>
@@ -38,35 +37,34 @@ taskScheduling pSelect;
 void setup(void)
 {
   Serial.begin(115200);
-  File.begin();
-
-  setup_sec();
-  Rtc.begin();
+  delay(100);
 
   timerRunSecuence.interval = INTERVAL_RUN_SECUENCE;
   timerCheckSecuence.interval = INTERVAL_CHECK_SECUENCE;
+  
+  File.begin();
+  Rtc.begin();
+  
+  setup_sec();
 
   //  obsD0.Distinct().Do([](int i) { updateGPIO("D0", i); });
   //  obsD5.Distinct().Do([](int i) { updateGPIO("D5", i); });
   //  obsD6.Distinct().Do([](int i) { updateGPIO("D6", i); });
   //  obsD7.Distinct().Do([](int i) { updateGPIO("D7", i); });
 
-  Wifi.begin(LED_BUILTIN);
-  ModeAp = Wifi.connectWiFi();
-  InitServer();
-  InitWebSockets();
-
-  if (ModeAp)
-    Serial.println("RUN Mode AP");
-
-  Serial.println("----------");
+  Serial.println("------------------------------");
   Serial.printf("\n\nSdk version: %s\n", ESP.getSdkVersion());
   Serial.printf("Core Version: %s\n", ESP.getCoreVersion().c_str());
   Serial.printf("Boot Version: %u\n", ESP.getBootVersion());
   Serial.printf("Boot Mode: %u\n", ESP.getBootMode());
   Serial.printf("CPU Frequency: %u MHz\n", ESP.getCpuFreqMHz());
   Serial.printf("Reset reason: %s\n", ESP.getResetReason().c_str());
-  Serial.println("----------");
+  Serial.println("------------------------------");
+
+  Wifi.begin(LED_BUILTIN);
+  ModeAp = Wifi.connectWiFi();
+  InitServer();
+  InitWebSockets();
 
   //ESP.wdtDisable();     // Desactivo WDG soft
   //ESP.wdtEnable(1000);  // Habilita WDG soft

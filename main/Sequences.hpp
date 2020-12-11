@@ -2,28 +2,32 @@
 #define NORMAL 0
 #define INVERTIDO 1
 
-struct executeSec {
-  String nSec = "";
-  signed int Array_IC[IC_NUMBER];   //
-  int nIC = 0;                      // IC seleccionado
-  int nBit = 0;                     // N de bit de un Byte
-  int toggle = 0;                   // Bandera blink
-  unsigned int rotation = NORMAL;
-  int count_repeat = 0;
-  boolean isCompleted = true;       // Secuencia completada
-  boolean init_sec = true;          // Primer arranque
+struct Execute_sec
+{
+  String name = "";               // Nombre de la secuencia.
+  signed int array_IC[IC_NUMBER]; // Array donde se almacena el valor a escribir.
+  byte index_IC = 0;              // IC seleccionado del array.
+  int index_Byte = 0;             // Byte seleccionado dentro del array de secuencia en ejecucion.
+  byte toggle = 0;                // Bandera blink
+  byte rotation = NORMAL;
+  byte repeat_counter = 0;      // Lleva la cuenta de la cantidad de repeticiones.
+  boolean is_completed = false; // Secuencia completada
+  boolean firts_run = true;     // Primer arranque
+  byte out_default = 0x00;      // Estado inicial de la salida
 };
 
-struct NOW_scheduledTask {
-  unsigned int sec_select = 0;    // Secuencia seleccionada
-  unsigned int sec_index = 1;     // Secuencia a ejecutar.
-  String sec_Rgb = "000000";      // Color de toda la secuencia.
-  long sec_timeMillis = 100;      // Tiempo de cada paso.
-  unsigned int sec_rotation = 0;  // Invierte o no el sentido de ejecucion.
-  unsigned int sec_repeat = 0;    // Cantidad de veces que se debe ejecutar.
+struct NOW_scheduledTask
+{
+  unsigned int sec_select = 0;   // Secuencia seleccionada
+  unsigned int sec_index = 1;    // Secuencia a ejecutar.
+  String sec_Rgb = "000000";     // Color de toda la secuencia.
+  long sec_timeMillis = 100;     // Tiempo de cada paso.
+  unsigned int sec_rotation = 0; // Invierte o no el sentido de ejecucion.
+  unsigned int sec_repeat = 0;   // Cantidad de veces que se debe ejecutar.
 };
 
-struct taskScheduling {
+struct taskScheduling
+{
   String name = "NameDefault";
   unsigned int enable = 1;
   DateTime iniDate = DateTime(2020, 1, 1);
@@ -53,389 +57,45 @@ struct taskScheduling {
 taskScheduling pGrm;
 NOW_scheduledTask NowScheduledTask;
 libRTC R;
-executeSec execSec;
+Execute_sec Execute;
 
 //---Config. Secuencias----------------------------------------------
 
-int const BlinkSize = 2;
-byte const Blink[] = { 0xFF, 0x00 };
+byte const Blink_size = 2;
+byte const Blink[] = {
+  0xFF, 0x00
+};
 
-int const EvenOrOddSize = 2;
-byte const EvenOrOdd[] = { 0xAA, 0x55 };
+int const EvenOrOdd_size = 2;
+byte const EvenOrOdd[] = {
+  0xAA, 0x55
+};
 
-int const PointSize = 8;
+byte const Point_size = 8;
 byte const Point[] = {
   0x01, 0x02, 0x04, 0x08,
   0x10, 0x20, 0x40, 0x80
 };
 
-int const HoleSize = 8;
+byte const Hole_size = 8;
 byte const Hole[] = {
   0xFE, 0xFD, 0xFB, 0xF7,
   0xEF, 0xDF, 0xBF, 0x7F
 };
 
-int const LadderSize = 8;
+byte const Ladder_size = 8;
 byte const Ladder[] = {
   0x01, 0x03, 0x07, 0x0F,
   0x1F, 0x3F, 0x7F, 0xFF
 };
 
-int const nLadderSize = 8;
+byte const nLadder_size = 8;
 byte const nLadder[] = {
   0xFE, 0xFC, 0xF8, 0xF0,
   0xE0, 0xC0, 0x80, 0x00
 };
 
-//---Funciones-------------------------------------------------------
-
-void write_74HC595(int regIC[]) {
-  for (int i = 0; i < IC_NUMBER; i++)
-    shiftOut(pinData, pinClock, LSBFIRST, regIC[i]);
-  digitalWrite(pinRegister, HIGH);
-  digitalWrite(pinRegister, LOW);
-}
-
-void set_out(int value) {
-  for (int i_ic = 0; i_ic < IC_NUMBER; i_ic++)
-    execSec.Array_IC[i_ic] = value;
-}
-
-void out_clear() {
-  for (int i_ic = 0; i_ic < IC_NUMBER; i_ic++)
-    execSec.Array_IC[i_ic] = INV_POLARITY ? 0xFF : 0x00;
-}
-
-void out_full() {
-  for (int i_ic = 0; i_ic < IC_NUMBER; i_ic++)
-    execSec.Array_IC[i_ic] = INV_POLARITY ? 0x00 : 0xFF;
-}
-
-void PrintDebug() {
-  if (DEBUG) {
-    Serial.print("#3 Sec_name= "); Serial.print(execSec.nSec);
-    Serial.print(", nbit= " ); Serial.print(execSec.nBit);
-    Serial.print(", Toggle= "); Serial.print(execSec.toggle);
-    Serial.print(", Value= ");
-    for (int iC = 0; iC < IC_NUMBER; iC++) {
-      Serial.print("0x"); Serial.print(execSec.Array_IC[iC], HEX);
-      if (iC < IC_NUMBER - 1)
-        Serial.print(" ");
-    }
-    Serial.println("");
-  }
-}
-
-//---Secuencias------------------------------------------------------
-
-void sec_off(boolean vPrint = false) {
-  execSec.nSec = "sec_on";
-
-  if (execSec.isCompleted)
-    execSec.toggle = 0;
-
-  //set_out(255);
-  out_clear();
-  execSec.isCompleted = 1;
-
-  if (vPrint)
-    PrintDebug();
-  write_74HC595(execSec.Array_IC);
-}
-
-void sec_on(boolean vPrint = false) {
-  execSec.nSec = "sec_on";
-
-  if (execSec.isCompleted)
-    execSec.toggle = 0;
-
-  //set_out(255);
-  out_full();
-  execSec.isCompleted = 1;
-
-  if (vPrint)
-    PrintDebug();
-  write_74HC595(execSec.Array_IC);
-}
-
-void sec_blink(boolean vPrint = false) {
-  execSec.nSec = "sec_blink";
-
-  if (execSec.isCompleted)
-    execSec.toggle = 0;
-
-  execSec.nIC = 0;
-  while (execSec.nIC < IC_NUMBER) {
-    execSec.Array_IC[execSec.nIC] = Blink[execSec.toggle];
-    execSec.nIC++;
-  }
-
-  execSec.isCompleted = execSec.toggle == BlinkSize - 1;
-  execSec.toggle = execSec.toggle < BlinkSize - 1 ? execSec.toggle + 1 : 0;
-
-  if (vPrint)
-    PrintDebug();
-  write_74HC595(execSec.Array_IC);
-}
-
-void sec_even_or_odd(boolean vPrint = false) {
-  execSec.nSec = "sec_even_or_odd";
-
-  if (execSec.isCompleted)
-    execSec.toggle = 0;
-
-  execSec.nIC = 0;
-  while (execSec.nIC < IC_NUMBER) {
-    execSec.Array_IC[execSec.nIC] = EvenOrOdd[execSec.toggle];
-    execSec.nIC++;
-  }
-
-  execSec.isCompleted = execSec.toggle == BlinkSize - 1;
-  execSec.toggle = execSec.toggle < BlinkSize - 1 ? execSec.toggle + 1 : 0;
-
-  if (vPrint)
-    PrintDebug();
-  write_74HC595(execSec.Array_IC);
-}
-
-void sec_mobile_point(boolean vPrint = false) {
-  execSec.nSec = "sec_mobile_point";
-
-  if (execSec.init_sec) {
-    //set_out(0);
-    out_clear();
-    execSec.nIC = execSec.rotation == NORMAL ? 0 : (IC_NUMBER - 1);
-    execSec.nBit = execSec.rotation == NORMAL ? 0 : 7;
-    execSec.isCompleted = false;
-    execSec.init_sec = false;
-  }
-
-  execSec.Array_IC[execSec.nIC] = Point[execSec.nBit];
-  write_74HC595(execSec.Array_IC);
-
-  if (vPrint)
-    PrintDebug();
-
-  if (execSec.rotation == NORMAL) {
-
-    if (execSec.nBit < PointSize) {
-      execSec.nBit++;
-
-      if (execSec.nBit == PointSize) {
-        execSec.Array_IC[execSec.nIC] = 0;
-        execSec.nBit = 0;
-
-        if (execSec.nIC < IC_NUMBER - 1) {
-          execSec.nIC++;
-        }
-        else {
-          execSec.nIC = 0;
-          execSec.isCompleted = true;
-          execSec.init_sec = true;
-        }
-      }
-    }
-  }
-  // INVERTIDO
-  else {
-    if (execSec.nBit >= 0) {
-      execSec.nBit--;
-      if (execSec.nBit == -1) {
-        execSec.Array_IC[execSec.nIC] = 0;
-        execSec.nBit = 7;
-
-        if (execSec.nIC > 0) {
-          execSec.nIC--;
-        }
-        else {
-          execSec.nIC = IC_NUMBER - 1;
-          execSec.isCompleted = true;
-          execSec.init_sec = true;
-        }
-      }
-    }
-  }
-}
-
-
-// OK
-void sec_mobile_hollow(boolean vPrint = false) { // Hueco movil movil
-  execSec.nSec = "sec_mobile_hollow";
-
-  if (execSec.init_sec) {
-    //set_out(0);
-    out_clear();
-    execSec.nIC = execSec.rotation == NORMAL ? 0 : (IC_NUMBER - 1);
-    execSec.nBit = execSec.rotation == NORMAL ? 0 : 7;
-    execSec.isCompleted = false;
-    execSec.init_sec = false;
-  }
-
-  execSec.Array_IC[execSec.nIC] = Hole[execSec.nBit];
-  write_74HC595(execSec.Array_IC);
-
-  if (vPrint)
-    PrintDebug();
-
-  if (execSec.rotation == NORMAL) {
-    if (execSec.nBit < HoleSize) {
-      execSec.nBit++;
-      if (execSec.nBit == HoleSize) {
-        execSec.Array_IC[execSec.nIC] = 255;
-        execSec.nBit = 0;
-
-        if (execSec.nIC < IC_NUMBER - 1) {
-          execSec.nIC++;
-        }
-        else {
-          execSec.nIC = 0;
-          execSec.isCompleted = true;
-          execSec.init_sec = true;
-        }
-      }
-    }
-  }
-  else {
-    if (execSec.nBit >= 0) {
-      execSec.nBit--;
-      if (execSec.nBit == -1) {
-        execSec.Array_IC[execSec.nIC] = 255;
-        execSec.nBit = 7;
-
-        if (execSec.nIC > 0) {
-          execSec.nIC--;
-        }
-        else {
-          execSec.nIC = IC_NUMBER - 1;
-          execSec.isCompleted = true;
-          execSec.init_sec = true;
-        }
-      }
-    }
-  }
-}
-
-void sec_positive_ladder(boolean vPrint = false) {
-  execSec.nSec = "sec_positive_ladder";
-
-  if (execSec.init_sec) {
-    //set_out(0);
-    out_clear();
-    execSec.nIC = execSec.rotation == NORMAL ? 0 : (IC_NUMBER - 1);
-    execSec.nBit = execSec.rotation == NORMAL ? 0 : 7;
-    execSec.isCompleted = false;
-    execSec.init_sec = false;
-  }
-
-  execSec.Array_IC[execSec.nIC] = execSec.rotation == NORMAL ? Ladder[execSec.nBit] : ~Ladder[execSec.nBit];
-  write_74HC595(execSec.Array_IC);
-
-  if (vPrint)
-    PrintDebug();
-
-  if (execSec.rotation == NORMAL) {
-    if (execSec.nBit < LadderSize) {
-      execSec.nBit++;
-      if (execSec.nBit == LadderSize) {
-        execSec.nBit = 0;
-
-        if (execSec.nIC < IC_NUMBER - 1) {
-          execSec.Array_IC[execSec.nIC] = 255;
-          execSec.nIC++;
-        }
-        else {
-          execSec.nIC = 0;
-          //set_out(0);
-          out_clear();
-          execSec.isCompleted = true;
-          execSec.init_sec = true;
-        }
-      }
-    }
-  }
-  else {
-
-    if (execSec.nBit >= 0) {
-      execSec.nBit--;
-
-      if (execSec.nBit == -1) {
-        execSec.Array_IC[execSec.nIC] = 0xFF;
-        execSec.nBit = 7;
-        if (execSec.nIC > 0) {
-          execSec.nIC--;
-        }
-        else {
-          execSec.nIC = IC_NUMBER - 1;
-          //set_out(0);
-          out_clear();
-          execSec.isCompleted = true;
-          execSec.init_sec = true;
-        }
-      }
-    }
-  }
-}
-
-void sec_negative_ladder(boolean vPrint = false) {
-  execSec.nSec = "sec_negative_ladder";
-
-  if (execSec.init_sec) {
-    //set_out(0);
-    out_clear();
-    execSec.nIC = execSec.rotation == NORMAL ? 0 : (IC_NUMBER - 1);
-    execSec.nBit = execSec.rotation == NORMAL ? 0 : 7;
-    execSec.isCompleted = false;
-    execSec.init_sec = false;
-  }
-
-  execSec.Array_IC[execSec.nIC] = execSec.rotation == NORMAL ? nLadder[execSec.nBit] : ~nLadder[execSec.nBit];
-  write_74HC595(execSec.Array_IC);
-
-  if (vPrint)
-    PrintDebug();
-
-  if (execSec.rotation == NORMAL) {
-    if (execSec.nBit < nLadderSize) {
-      execSec.nBit++;
-      if (execSec.nBit == nLadderSize) {
-        execSec.nBit = 0;
-
-        if (execSec.nIC < IC_NUMBER - 1) {
-          execSec.Array_IC[execSec.nIC] = 0;
-          execSec.nIC++;
-        }
-        else {
-          execSec.nIC = 0;
-          //set_out(255);
-          out_full();
-          execSec.isCompleted = true;
-          execSec.init_sec = true;
-        }
-      }
-    }
-  }
-  else {
-    if (execSec.nBit >= 0) {
-      execSec.nBit--;
-      if (execSec.nBit == -1) {
-        execSec.Array_IC[execSec.nIC] = 0x00;
-        execSec.nBit = 7;
-        if (execSec.nIC > 0) {
-          execSec.nIC--;
-        }
-        else {
-          execSec.nIC = IC_NUMBER - 1;
-          //set_out(255);
-          out_full();
-          execSec.isCompleted = true;
-          execSec.init_sec = true;
-        }
-      }
-    }
-  }
-}
-
-//---Programa------------------------------------------------------
+//---SETUP Programa--------------------------------------------------
 void setup_sec()
 {
   pinMode(pinData, OUTPUT);
@@ -444,16 +104,391 @@ void setup_sec()
   digitalWrite(pinRegister, LOW);
 }
 
+//---Funciones-------------------------------------------------------
+
+// OK
+void print_debug() {
+  if (DEBUG) {
+    Serial.print("#3 Sec.: "); Serial.print(Execute.name);
+    Serial.print(", Byte: "); Serial.print(Execute.index_Byte);
+    Serial.print(", Toggle: "); Serial.print(Execute.toggle);
+    Serial.print(", Value: ");
+    for (int index_IC = 0; index_IC < IC_NUMBER; index_IC++) {
+      Serial.print("0x");
+      Serial.print(Execute.array_IC[index_IC], HEX);
+      if (index_IC < IC_NUMBER - 1)
+        Serial.print(" ");
+    }
+    Serial.println("");
+  }
+}
+
+// OK
+void write_74HC595(int regIC[]) {
+  for (int i = 0; i < IC_NUMBER; i++)
+    shiftOut(pinData, pinClock, LSBFIRST, regIC[i]);
+  digitalWrite(pinRegister, HIGH);
+  digitalWrite(pinRegister, LOW);
+}
+
+// OK
+void out_set_value(unsigned int value) {
+  for (int index_IC = 0; index_IC < IC_NUMBER; index_IC++)
+    Execute.array_IC[index_IC] = value;
+}
+
+// OK
+byte out_clear() {
+  byte value = 0x00; //INV_POLARITY ? 0xFF : 0x00;
+  for (int index_IC = 0; index_IC < IC_NUMBER; index_IC++)
+    Execute.array_IC[index_IC] = value;
+  return value;
+}
+
+// OK
+byte out_full() {
+  byte value = 0xFF; //INV_POLARITY ? 0x00 : 0xFF;
+  for (int index_IC = 0; index_IC < IC_NUMBER; index_IC++)
+    Execute.array_IC[index_IC] = value;
+  return value;
+}
+
+//---Secuencias------------------------------------------------------
+
+// OK
+void sec_blink(boolean vPrint = false) {
+  Execute.name = "Blink";
+
+  if (Execute.is_completed)
+    Execute.toggle = 0;
+
+  Execute.index_IC = 0;
+  while (Execute.index_IC < IC_NUMBER) {
+    Execute.array_IC[Execute.index_IC] = Blink[Execute.toggle];
+    Execute.index_IC++;
+  }
+
+  Execute.is_completed = Execute.toggle == Blink_size - 1;
+  Execute.toggle = Execute.toggle < Blink_size - 1 ? Execute.toggle + 1 : 0;
+
+  if (vPrint)
+    print_debug();
+
+  write_74HC595(Execute.array_IC);
+}
+
+// OK
+void sec_even_or_odd(boolean vPrint = false) {
+  Execute.name = "Even Or Odd";
+
+  if (Execute.is_completed)
+    Execute.toggle = 0;
+
+  Execute.index_IC = 0;
+  while (Execute.index_IC < IC_NUMBER) {
+    Execute.array_IC[Execute.index_IC] = EvenOrOdd[Execute.toggle];
+    Execute.index_IC++;
+  }
+
+  Execute.is_completed = Execute.toggle == EvenOrOdd_size - 1;
+  Execute.toggle = Execute.toggle < EvenOrOdd_size - 1 ? Execute.toggle + 1 : 0;
+
+  if (vPrint)
+    print_debug();
+
+  write_74HC595(Execute.array_IC);
+}
+
+// OK
+void sec_mobile_point(boolean vPrint = false) {
+
+  byte array_size = INV_POLARITY == 0 ? Point_size : Hole_size;
+
+  if (Execute.firts_run) {
+    Execute.name = "Mobile Point";
+    Execute.out_default = INV_POLARITY == 0 ? out_clear() : out_full();
+    Execute.index_IC = Execute.rotation == NORMAL ? 0 : (IC_NUMBER - 1);
+    Execute.index_Byte = Execute.rotation == NORMAL ? 0 : (array_size - 1);
+    Execute.is_completed = false;
+    Execute.firts_run = false;
+  }
+
+  Execute.array_IC[Execute.index_IC] =  (INV_POLARITY == 0 ? Point : Hole)[Execute.index_Byte];
+  write_74HC595(Execute.array_IC);
+
+  if (vPrint)
+    print_debug();
+
+  if (Execute.rotation == NORMAL) {
+
+    if (Execute.index_Byte < array_size) {
+      Execute.index_Byte++;
+
+      if (Execute.index_Byte == array_size) {
+        Execute.array_IC[Execute.index_IC] = Execute.out_default;
+        Execute.index_Byte = 0;
+
+        if (Execute.index_IC < IC_NUMBER - 1)
+          Execute.index_IC++;
+        else {
+          Execute.index_IC = 0;
+          Execute.is_completed = true;
+          Execute.firts_run = true;
+        }
+      }
+    }
+  }
+  // INVERTIDO
+  else {
+    if (Execute.index_Byte >= 0) {
+      Execute.index_Byte--;
+
+      if (Execute.index_Byte == -1) {
+        Execute.array_IC[Execute.index_IC] = Execute.out_default;
+        Execute.index_Byte = (array_size - 1);
+
+        if (Execute.index_IC > 0)
+          Execute.index_IC--;
+        else {
+          Execute.index_IC = IC_NUMBER - 1;
+          Execute.is_completed = true;
+          Execute.firts_run = true;
+        }
+      }
+    }
+  }
+}
+
+// OK
+void sec_mobile_hollow(boolean vPrint = false) {
+
+  byte array_size = INV_POLARITY == 0 ? Point_size : Hole_size;
+
+  if (Execute.firts_run) {
+    Execute.name = "Mobile Hollow";
+    Execute.out_default = INV_POLARITY == 0 ? out_full() : out_clear();
+    Execute.index_IC = Execute.rotation == NORMAL ? 0 : (IC_NUMBER - 1);
+    Execute.index_Byte = Execute.rotation == NORMAL ? 0 : (array_size - 1);
+    Execute.is_completed = false;
+    Execute.firts_run = false;
+  }
+
+  Execute.array_IC[Execute.index_IC] =  (INV_POLARITY == 0 ? Hole : Point)[Execute.index_Byte];
+  write_74HC595(Execute.array_IC);
+
+  if (vPrint)
+    print_debug();
+
+  if (Execute.rotation == NORMAL) {
+    if (Execute.index_Byte < array_size) {
+      Execute.index_Byte++;
+      if (Execute.index_Byte == array_size) {
+        Execute.array_IC[Execute.index_IC] = Execute.out_default;
+        Execute.index_Byte = 0;
+
+        if (Execute.index_IC < IC_NUMBER - 1)
+          Execute.index_IC++;
+        else {
+          Execute.index_IC = 0;
+          Execute.is_completed = true;
+          Execute.firts_run = true;
+        }
+      }
+    }
+  }
+  else {
+    if (Execute.index_Byte >= 0) {
+      Execute.index_Byte--;
+      if (Execute.index_Byte == -1) {
+        Execute.array_IC[Execute.index_IC] = Execute.out_default;
+        Execute.index_Byte = 7;
+
+        if (Execute.index_IC > 0)
+          Execute.index_IC--;
+        else {
+          Execute.index_IC = IC_NUMBER - 1;
+          Execute.is_completed = true;
+          Execute.firts_run = true;
+        }
+      }
+    }
+  }
+}
+
+// OK
+void sec_positive_ladder(boolean vPrint = false) {
+
+  byte array_size = INV_POLARITY == 0 ? Ladder_size : nLadder_size;
+
+  if (Execute.firts_run) {
+    Execute.name = "Positive Ladder";
+    Execute.out_default = INV_POLARITY == 0 ? out_clear() : out_full();
+    Execute.index_IC = Execute.rotation == NORMAL ? 0 : (IC_NUMBER - 1);
+    Execute.index_Byte = Execute.rotation == NORMAL ? 0 : (array_size - 1);
+    Execute.is_completed = false;
+    Execute.firts_run = false;
+  }
+
+  if (Execute.rotation == NORMAL)
+    Execute.array_IC[Execute.index_IC] = (INV_POLARITY == 0 ? Ladder : nLadder)[Execute.index_Byte];
+  else
+    Execute.array_IC[Execute.index_IC] = ~(INV_POLARITY == 0 ? Ladder : nLadder)[Execute.index_Byte];
+
+  write_74HC595(Execute.array_IC);
+
+  if (vPrint)
+    print_debug();
+
+  if (Execute.rotation == NORMAL) {
+    if (Execute.index_Byte < array_size) {
+      Execute.index_Byte++;
+      if (Execute.index_Byte == array_size) {
+        Execute.index_Byte = 0;
+
+        if (Execute.index_IC < IC_NUMBER - 1) {
+          Execute.array_IC[Execute.index_IC] = Execute.out_default == 0x00 ? 0xFF : 0x00;
+          Execute.index_IC++;
+        }
+        else {
+          Execute.index_IC = 0;
+          out_set_value(Execute.out_default);//out_clear();
+          Execute.is_completed = true;
+          Execute.firts_run = true;
+        }
+      }
+    }
+  }
+  else {
+    if (Execute.index_Byte >= 0) {
+      Execute.index_Byte--;
+
+      if (Execute.index_Byte == -1) {
+        Execute.array_IC[Execute.index_IC] = Execute.out_default == 0x00 ? 0xFF : 0x00;
+        Execute.index_Byte = 7;
+        if (Execute.index_IC > 0) {
+          Execute.index_IC--;
+        }
+        else {
+          Execute.index_IC = IC_NUMBER - 1;
+          out_set_value(Execute.out_default);
+          Execute.is_completed = true;
+          Execute.firts_run = true;
+        }
+      }
+    }
+  }
+}
+
+// OK
+void sec_negative_ladder(boolean vPrint = false) {
+
+  byte array_size = INV_POLARITY == 0 ? nLadder_size : Ladder_size;
+
+  if (Execute.firts_run) {
+    Execute.name = "Negative Ladder";
+    Execute.out_default = INV_POLARITY == 0 ? out_full() : out_clear();
+    Execute.index_IC = Execute.rotation == NORMAL ? 0 : (IC_NUMBER - 1);
+    Execute.index_Byte = Execute.rotation == NORMAL ? 0 : (array_size - 1);
+    Execute.is_completed = false;
+    Execute.firts_run = false;
+  }
+
+  if (Execute.rotation == NORMAL)
+    Execute.array_IC[Execute.index_IC] = (INV_POLARITY == 0 ? nLadder : Ladder)[Execute.index_Byte];
+  else
+    Execute.array_IC[Execute.index_IC] = ~(INV_POLARITY == 0 ? nLadder : Ladder)[Execute.index_Byte];
+
+  write_74HC595(Execute.array_IC);
+
+  if (vPrint)
+    print_debug();
+
+  if (Execute.rotation == NORMAL) {
+    if (Execute.index_Byte < array_size) {
+      Execute.index_Byte++;
+      if (Execute.index_Byte == array_size) {
+        Execute.index_Byte = 0;
+
+        if (Execute.index_IC < IC_NUMBER - 1) {
+          Execute.array_IC[Execute.index_IC] = INV_POLARITY == 0 ? 0x00 : 0xFF;
+          Execute.index_IC++;
+        }
+        else {
+          Execute.index_IC = 0;
+          out_clear();
+          Execute.is_completed = true;
+          Execute.firts_run = true;
+        }
+      }
+    }
+  }
+  else {
+    if (Execute.index_Byte >= 0) {
+      Execute.index_Byte--;
+      if (Execute.index_Byte == -1) {
+        Execute.array_IC[Execute.index_IC] = INV_POLARITY == 0 ? 0x00 : 0xFF; //0xFF;
+        Execute.index_Byte = 7;
+        if (Execute.index_IC > 0) {
+          Execute.index_IC--;
+        }
+        else {
+          Execute.index_IC = IC_NUMBER - 1;
+          out_clear();
+          Execute.is_completed = true;
+          Execute.firts_run = true;
+        }
+      }
+    }
+  }
+}
+
+// OK
+void sec_off(boolean vPrint = false)
+{
+  Execute.name = "Off";
+
+  if (Execute.is_completed)
+    Execute.toggle = 0;
+
+  out_clear();
+  Execute.is_completed = true;
+
+  if (vPrint)
+    print_debug();
+
+  write_74HC595(Execute.array_IC);
+}
+
+// OK
+void sec_on(boolean vPrint = false)
+{
+  Execute.name = "On";
+
+  if (Execute.is_completed)
+    Execute.toggle = 0;
+
+  out_full();
+  Execute.is_completed = true;
+
+  if (vPrint)
+    print_debug();
+
+  write_74HC595(Execute.array_IC);
+}
+
 //---Lectura/Escritura-----------------------------------------------
 
-boolean readProgramHeader(String vName, boolean vPrint = false) {
+boolean readProgramHeader(String vName, boolean vPrint = false)
+{
   File configFile = SPIFFS.open(vName, "r");
-  if (!configFile) {
+  if (!configFile)
+  {
     Serial.println("Failed to open file");
     return false;
   }
 
-  if (configFile.size() > 1024) {
+  if (configFile.size() > 1024)
+  {
     Serial.println("Config file size is too large");
     return false;
   }
@@ -462,62 +497,72 @@ boolean readProgramHeader(String vName, boolean vPrint = false) {
 
   StaticJsonDocument<800> doc;
   DeserializationError error = deserializeJson(doc, configFile);
-  if (error) {
+  if (error)
+  {
     Serial.println("Error deserializing file");
     return false;
   }
 
-  const char* name = doc["name"];
+  const char *name = doc["name"];
   const unsigned int enable = doc["enable"];
-  const char* iniDate = doc["iniDate"];
-  const char* endDate = doc["endDate"];
+  const char *iniDate = doc["iniDate"];
+  const char *endDate = doc["endDate"];
   pGrm.name = name;
   pGrm.enable = enable;
   pGrm.iniDate = R.stringToDatetime(iniDate);
   pGrm.endDate = R.stringToDatetime(endDate);
 
-  if (vPrint) {
+  if (vPrint)
+  {
     Serial.println("--- Configuracion leida ---");
-    Serial.print("name= "); Serial.println(pGrm.name);
-    Serial.print("enable= "); Serial.println(pGrm.enable);
-    Serial.print("iniDate= "); Serial.println(R.datetimeToString(pGrm.iniDate));
-    Serial.print("endDate= "); Serial.println(R.datetimeToString(pGrm.endDate));
+    Serial.print("name= ");
+    Serial.println(pGrm.name);
+    Serial.print("enable= ");
+    Serial.println(pGrm.enable);
+    Serial.print("iniDate= ");
+    Serial.println(R.datetimeToString(pGrm.iniDate));
+    Serial.print("endDate= ");
+    Serial.println(R.datetimeToString(pGrm.endDate));
     Serial.println("---------------------------");
   }
 
   return true;
 }
 
-boolean readProgram(String vName, boolean vPrint = false) {
+boolean readProgram(String vName, boolean vPrint = false)
+{
   File configFile = SPIFFS.open(vName, "r");
-  if (!configFile) {
+  if (!configFile)
+  {
     Serial.println("Failed to open file");
     return false;
   }
 
-  if (configFile.size() > 1024) {
+  if (configFile.size() > 1024)
+  {
     Serial.println("Config file size is too large");
     return false;
   }
 
   StaticJsonDocument<800> doc;
   DeserializationError error = deserializeJson(doc, configFile);
-  if (error) {
+  if (error)
+  {
     Serial.println("Error deserializing file");
     return false;
   }
 
-  const char* name = doc["name"];
+  const char *name = doc["name"];
   const unsigned int enable = doc["enable"];
-  const char* iniDate = doc["iniDate"];
-  const char* endDate = doc["endDate"];
+  const char *iniDate = doc["iniDate"];
+  const char *endDate = doc["endDate"];
   pGrm.name = name;
   pGrm.enable = enable;
   pGrm.iniDate = R.stringToDatetime(iniDate);
   pGrm.endDate = R.stringToDatetime(endDate);
 
   const unsigned int sec1_index = doc["sec1_index"];
-  const char* sec1_rgb = doc["sec1_rgb"];
+  const char *sec1_rgb = doc["sec1_rgb"];
   const unsigned int sec1_millis = doc["sec1_millis"];
   const unsigned int sec1_rotation = doc["sec1_rotation"];
   const unsigned int sec1_repeat = doc["sec1_repeat"];
@@ -528,7 +573,7 @@ boolean readProgram(String vName, boolean vPrint = false) {
   pGrm.sec1_repeat = sec1_repeat;
 
   const unsigned int sec2_index = doc["sec2_index"];
-  const char* sec2_rgb = doc["sec2_rgb"];
+  const char *sec2_rgb = doc["sec2_rgb"];
   const unsigned int sec2_millis = doc["sec2_millis"];
   const unsigned int sec2_rotation = doc["sec2_rotation"];
   const unsigned int sec2_repeat = doc["sec2_repeat"];
@@ -539,7 +584,7 @@ boolean readProgram(String vName, boolean vPrint = false) {
   pGrm.sec2_repeat = sec2_repeat;
 
   const unsigned int sec3_index = doc["sec3_index"];
-  const char* sec3_rgb = doc["sec3_rgb"];
+  const char *sec3_rgb = doc["sec3_rgb"];
   const unsigned int sec3_millis = doc["sec3_millis"];
   const unsigned int sec3_rotation = doc["sec3_rotation"];
   const unsigned int sec3_repeat = doc["sec3_repeat"];
@@ -550,7 +595,7 @@ boolean readProgram(String vName, boolean vPrint = false) {
   pGrm.sec3_repeat = sec3_repeat;
 
   const unsigned int sec4_index = doc["sec4_index"];
-  const char* sec4_rgb = doc["sec4_rgb"];
+  const char *sec4_rgb = doc["sec4_rgb"];
   const unsigned int sec4_millis = doc["sec4_millis"];
   const unsigned int sec4_rotation = doc["sec4_rotation"];
   const unsigned int sec4_repeat = doc["sec4_repeat"];
@@ -560,32 +605,57 @@ boolean readProgram(String vName, boolean vPrint = false) {
   pGrm.sec4_rotation = sec4_rotation;
   pGrm.sec4_repeat = sec4_repeat;
 
-  if (vPrint) {
+  if (vPrint)
+  {
     Serial.println("--- Configuracion leida ---");
-    Serial.print("name= "); Serial.println(pGrm.name);
-    Serial.print("enable= "); Serial.println(pGrm.enable);
-    Serial.print("iniDate= "); Serial.println(R.datetimeToString(pGrm.iniDate));
-    Serial.print("endDate= "); Serial.println(R.datetimeToString(pGrm.endDate));
-    Serial.print("sec1_index= "); Serial.println(pGrm.sec1_index);
-    Serial.print("sec1_rgb= "); Serial.println(pGrm.sec1_rgb);
-    Serial.print("sec1_millis= "); Serial.println(pGrm.sec1_millis);
-    Serial.print("sec1_rotation= "); Serial.println(pGrm.sec1_rotation);
-    Serial.print("sec1_repeat= "); Serial.println(pGrm.sec1_repeat);
-    Serial.print("sec2_index= "); Serial.println(pGrm.sec2_index);
-    Serial.print("sec2_rgb= "); Serial.println(pGrm.sec2_rgb);
-    Serial.print("sec2_millis= "); Serial.println(pGrm.sec2_millis);
-    Serial.print("sec2_rotation= "); Serial.println(pGrm.sec2_rotation);
-    Serial.print("sec2_repeat= "); Serial.println(pGrm.sec2_repeat);
-    Serial.print("sec3_index= "); Serial.println(pGrm.sec3_index);
-    Serial.print("sec3_rgb= "); Serial.println(pGrm.sec3_rgb);
-    Serial.print("sec3_millis= "); Serial.println(pGrm.sec3_millis);
-    Serial.print("sec3_rotation= "); Serial.println(pGrm.sec3_rotation);
-    Serial.print("sec3_repeat= "); Serial.println(pGrm.sec3_repeat);
-    Serial.print("sec4_index= "); Serial.println(pGrm.sec4_index);
-    Serial.print("sec4_rgb= "); Serial.println(pGrm.sec4_rgb);
-    Serial.print("sec4_millis= "); Serial.println(pGrm.sec4_millis);
-    Serial.print("sec4_rotation= "); Serial.println(pGrm.sec4_rotation);
-    Serial.print("sec4_repeat= "); Serial.println(pGrm.sec4_repeat);
+    Serial.print("name= ");
+    Serial.println(pGrm.name);
+    Serial.print("enable= ");
+    Serial.println(pGrm.enable);
+    Serial.print("iniDate= ");
+    Serial.println(R.datetimeToString(pGrm.iniDate));
+    Serial.print("endDate= ");
+    Serial.println(R.datetimeToString(pGrm.endDate));
+    Serial.print("sec1_index= ");
+    Serial.println(pGrm.sec1_index);
+    Serial.print("sec1_rgb= ");
+    Serial.println(pGrm.sec1_rgb);
+    Serial.print("sec1_millis= ");
+    Serial.println(pGrm.sec1_millis);
+    Serial.print("sec1_rotation= ");
+    Serial.println(pGrm.sec1_rotation);
+    Serial.print("sec1_repeat= ");
+    Serial.println(pGrm.sec1_repeat);
+    Serial.print("sec2_index= ");
+    Serial.println(pGrm.sec2_index);
+    Serial.print("sec2_rgb= ");
+    Serial.println(pGrm.sec2_rgb);
+    Serial.print("sec2_millis= ");
+    Serial.println(pGrm.sec2_millis);
+    Serial.print("sec2_rotation= ");
+    Serial.println(pGrm.sec2_rotation);
+    Serial.print("sec2_repeat= ");
+    Serial.println(pGrm.sec2_repeat);
+    Serial.print("sec3_index= ");
+    Serial.println(pGrm.sec3_index);
+    Serial.print("sec3_rgb= ");
+    Serial.println(pGrm.sec3_rgb);
+    Serial.print("sec3_millis= ");
+    Serial.println(pGrm.sec3_millis);
+    Serial.print("sec3_rotation= ");
+    Serial.println(pGrm.sec3_rotation);
+    Serial.print("sec3_repeat= ");
+    Serial.println(pGrm.sec3_repeat);
+    Serial.print("sec4_index= ");
+    Serial.println(pGrm.sec4_index);
+    Serial.print("sec4_rgb= ");
+    Serial.println(pGrm.sec4_rgb);
+    Serial.print("sec4_millis= ");
+    Serial.println(pGrm.sec4_millis);
+    Serial.print("sec4_rotation= ");
+    Serial.println(pGrm.sec4_rotation);
+    Serial.print("sec4_repeat= ");
+    Serial.println(pGrm.sec4_repeat);
     Serial.println("---------------------------");
   }
 
@@ -632,9 +702,8 @@ boolean saveProgram(taskScheduling vPgrm, boolean vPrint = false) {
   }
   serializeJson(doc, configFile);
 
-  if (vPrint) {
+  if (vPrint)
     Serial.println("Configuracion guardada");
-  }
 
   return true;
 }
@@ -649,7 +718,8 @@ struct Temp {
 
 Temp temp;
 
-boolean readTemp(boolean vPrint = false) {
+boolean readTemp(boolean vPrint = false)
+{
   File tempFile = SPIFFS.open(TEMP, "r");
   if (!tempFile) {
     Serial.println("Failed to open file");
@@ -667,10 +737,10 @@ boolean readTemp(boolean vPrint = false) {
     return false;
   }
 
-  const char* secName = doc["secName"];
+  const char *secName = doc["secName"];
   const long duration = doc["duration"];
-  const char* iniDate = doc["iniDate"];
-  const char* endDate = doc["endDate"];
+  const char *iniDate = doc["iniDate"];
+  const char *endDate = doc["endDate"];
   temp.secName = secName;
   temp.duration = duration;
   temp.iniDate = R.stringToDatetime(iniDate);
@@ -678,17 +748,22 @@ boolean readTemp(boolean vPrint = false) {
 
   if (vPrint) {
     Serial.println("--- Temporal leido ---");
-    Serial.print("secName= "); Serial.println(temp.secName);
-    Serial.print("duration= "); Serial.println(temp.duration);
-    Serial.print("iniDate= "); Serial.println(R.datetimeToString(temp.iniDate));
-    Serial.print("endDate= "); Serial.println(R.datetimeToString(temp.endDate));
+    Serial.print("secName= ");
+    Serial.println(temp.secName);
+    Serial.print("duration= ");
+    Serial.println(temp.duration);
+    Serial.print("iniDate= ");
+    Serial.println(R.datetimeToString(temp.iniDate));
+    Serial.print("endDate= ");
+    Serial.println(R.datetimeToString(temp.endDate));
     Serial.println("---------------------------");
   }
 
   return true;
 }
 
-boolean saveTemp(boolean vPrint = false) {
+boolean saveTemp(boolean vPrint = false)
+{
   StaticJsonDocument<700> doc;
   doc["secName"] = temp.secName;
   doc["duration"] = temp.duration;
@@ -696,15 +771,14 @@ boolean saveTemp(boolean vPrint = false) {
   doc["endDate"] = R.datetimeToString(temp.endDate);
 
   File tempFile = SPIFFS.open(TEMP, "w");
-  if (!tempFile) {
+  if (!tempFile){
     Serial.println("Error opening configuration file for writing");
     return false;
   }
   serializeJson(doc, tempFile);
 
-  if (vPrint) {
+  if (vPrint)
     Serial.println("Temporal guardado");
-  }
 
   return true;
 }
@@ -734,7 +808,6 @@ boolean CompareTime(DateTime dtIni, DateTime dtEnd) {
   return vDiff.totalseconds() > 0;
 }
 
-
 taskScheduling FindScheduleFile(boolean vPrint = false) {
   DateTime NOW = R.Now();
   int countfile = 0;
@@ -742,10 +815,13 @@ taskScheduling FindScheduleFile(boolean vPrint = false) {
 
   Dir files = SPIFFS.openDir(DIR_PROGRAM);
 
-  Serial.print("Read files:\tNOW= "); Serial.println(R.datetimeToString(NOW));
+  Serial.print("Read files:\tNOW= ");
+  Serial.println(R.datetimeToString(NOW));
 
-  while (files.next()) {
-    if (readProgram(files.fileName(), vPrint) && pGrm.enable) {
+  while (files.next())
+  {
+    if (readProgram(files.fileName(), vPrint) && pGrm.enable)
+    {
       countfile++;
 
       boolean EnableTime = false;
@@ -773,34 +849,31 @@ taskScheduling FindScheduleFile(boolean vPrint = false) {
       TimeSpan tsDiffEnable = vIniTime - NOW;
       TimeSpan tsDiffDisable = vEndTime - NOW;
 
-      if (diff.totalseconds() > 0) {
+      if (diff.totalseconds() > 0)
+      {
         // EnableTime (Compara horario) - Etapa I
         EnableTime = EnableDate && tsDiffEnable.totalseconds() < 0;
 
         // DisableTime (Compara horario) - Etapa I
         DisableTime = EnableDate && tsDiffDisable.totalseconds() < 0;
       }
-      else {
+      else
+      {
         //--VER--------------------------------------------------------------------------
-        Serial.print("TEST #1- (diff < 0)\t");
-        Serial.println(diff.totalseconds());
+        Serial.print("TEST #1- (diff < 0)\t"); Serial.println(diff.totalseconds());
 
         TimeSpan diffEndTime = NOW - vEndTime;
         TimeSpan diffIniTime = NOW - vIniTime;
 
         Serial.print("TEST #1.2- (now - vIniTime = diffIniTime)\t");
         Serial.print(R.datetimeToString(NOW));
-        Serial.print(" - ");
-        Serial.print(R.datetimeToString(vIniTime));
-        Serial.print(" = ");
-        Serial.println(diffIniTime.totalseconds());
+        Serial.print(" - "); Serial.print(R.datetimeToString(vIniTime));
+        Serial.print(" = "); Serial.println(diffIniTime.totalseconds());
 
         Serial.print("TEST #1.3- (now - vEndTime = diffEndTime)\t");
         Serial.print(R.datetimeToString(NOW));
-        Serial.print(" - ");
-        Serial.print(R.datetimeToString(vEndTime));
-        Serial.print(" = ");
-        Serial.println(diffEndTime.totalseconds());
+        Serial.print(" - "); Serial.print(R.datetimeToString(vEndTime));
+        Serial.print(" = "); Serial.println(diffEndTime.totalseconds());
 
         if (EnableDate && NOW >= diffIniTime.totalseconds() && NOW <= diffEndTime.totalseconds()) {
           Serial.println("TEST #1.4- Entre ini y end");
@@ -818,7 +891,8 @@ taskScheduling FindScheduleFile(boolean vPrint = false) {
       Serial.print("# "); Serial.print(countfile);
       Serial.print(" = "); Serial.print(pGrm.name);
       Serial.print("\t["); Serial.print(R.datetimeToString(pGrm.iniDate));
-      Serial.print(" - "); Serial.print(R.datetimeToString(pGrm.endDate)); Serial.println("]");
+      Serial.print(" - "); Serial.print(R.datetimeToString(pGrm.endDate));
+      Serial.println("]");
       Serial.print("Valid= "); Serial.print(EnableDate ? "Yes" : "No");
       Serial.print("\tPeriod= "); Serial.println(R.toStringTimeSpan(duration));
       Serial.print(EnableTime); Serial.print(" & !"); Serial.print(DisableTime);
@@ -826,25 +900,29 @@ taskScheduling FindScheduleFile(boolean vPrint = false) {
       Serial.print("\tDuration= "); Serial.println(R.toStringTimeSpan(timeRunTask.totalseconds()));
       Serial.print("\t\tTime to run= "); Serial.println(R.toStringTimeSpan(tsDiffEnable.totalseconds()));
 
-      if (EnableTime & !DisableTime) {
+      if (EnableTime & !DisableTime){
         if (pTemp.name == "NameDefault") {
           pTemp = pGrm;
-          Serial.print("TEST #2.1- Default="); Serial.println(pTemp.name);
+          Serial.print("TEST #2.1- Default=");
+          Serial.println(pTemp.name);
         }
         else if (CompareTime(pTemp.iniDate, pGrm.iniDate)) {
           pTemp = pGrm;
-          Serial.print("TEST #2.2- Compare= "); Serial.println(pTemp.name);
+          Serial.print("TEST #2.2- Compare= ");
+          Serial.println(pTemp.name);
         }
         else {
           //pTemp = taskScheduling();
-          Serial.print("TEST #2.3- None= "); Serial.println(pTemp.name);
+          Serial.print("TEST #2.3- None= ");
+          Serial.println(pTemp.name);
         }
       }
     }
   }
 
   pGrm = pTemp;
-  Serial.print("Is RUN= "); Serial.println(pGrm.name);
+  Serial.print("Is RUN= ");
+  Serial.println(pGrm.name);
 
   taskScheduling pSelect;
   pSelect.name = pGrm.name;
@@ -897,9 +975,9 @@ void help() {
 }
 
 void Secuences_Menu(String command, String parameters) {
-  execSec.rotation = NORMAL;
+  Execute.rotation = NORMAL;
   if (parameters.length() > 0 & parameters == SEC_INV)
-    execSec.rotation = INVERTIDO;
+    Execute.rotation = INVERTIDO;
   if (command == BLINK | command == "1")
     NowScheduledTask.sec_select = 1;
   else if (command == EVEN_OR_ODD | command == "2")
@@ -916,12 +994,10 @@ void Secuences_Menu(String command, String parameters) {
     NowScheduledTask.sec_select = 7;
   else if (command == OFF | command == "8")
     NowScheduledTask.sec_select = 8;
-  else if (command == "help") {
+  else if (command == "help")
     help();
-  }
-  else {
+  else 
     Serial.println("SECMODE - Invalid command. Type help");
-  }
 }
 
 void sec_execute(boolean vPrint = false) {
@@ -964,11 +1040,8 @@ void sec_execute(boolean vPrint = false) {
   }
 }
 
-
 long executeNextProgramming(taskScheduling pGrm, boolean vPrint = false) {
-
   if (pGrm.name != "NameDefault") {
-
     libColor Color;
     Color.begin(pinRED, pinGREEN, pinBLUE);
     int maxSelect = 0;
@@ -977,11 +1050,11 @@ long executeNextProgramming(taskScheduling pGrm, boolean vPrint = false) {
     maxSelect = pGrm.sec3_index != 0 ? maxSelect + 1 : maxSelect;
     maxSelect = pGrm.sec4_index != 0 ? maxSelect + 1 : maxSelect;
 
-    if (execSec.isCompleted) {
-      execSec.count_repeat++;
-      if (!(execSec.count_repeat < NowScheduledTask.sec_repeat)) {
+    if (Execute.is_completed) {
+      Execute.repeat_counter++;
+      if (!(Execute.repeat_counter < NowScheduledTask.sec_repeat)) {
         NowScheduledTask.sec_index = NowScheduledTask.sec_index < maxSelect ? NowScheduledTask.sec_index + 1 : 1;
-        execSec.count_repeat = 0;
+        Execute.repeat_counter = 0;
       }
     }
 
@@ -1029,18 +1102,24 @@ long executeNextProgramming(taskScheduling pGrm, boolean vPrint = false) {
     }
 
     Color.Rgb = NowScheduledTask.sec_Rgb;
-    execSec.rotation = NowScheduledTask.sec_rotation;
+    Execute.rotation = NowScheduledTask.sec_rotation;
 
     if (DEBUG) {
+      float total_progress = maxSelect * NowScheduledTask.sec_repeat;
+      float now_progress = NowScheduledTask.sec_index * (Execute.repeat_counter + 1);
+      float exec_percent = (now_progress * 100) / total_progress;
+
       Serial.println("---");
-      Serial.print("#1 File_name= "); Serial.print(pGrm.name);
-      Serial.print(", Item= "); Serial.print(NowScheduledTask.sec_index);
+      Serial.print("#0 Progress: "); Serial.print(exec_percent); Serial.print("%");
+      Serial.print(" Logic denied: "); Serial.println(INV_POLARITY);
+      Serial.print("#1 Task: "); Serial.print(pGrm.name);
+      Serial.print(", Sec_ID: "); Serial.print(NowScheduledTask.sec_select);
+      Serial.print(", Item: "); Serial.print(NowScheduledTask.sec_index);
       Serial.print("/"); Serial.print(maxSelect);
-      Serial.print(", Sec_ID= "); Serial.print(NowScheduledTask.sec_select);
-      Serial.print(", Time= "); Serial.print(NowScheduledTask.sec_timeMillis);
-      Serial.print("ms, Repeat= "); Serial.print(execSec.count_repeat + 1);
+      Serial.print(", Time: "); Serial.print(NowScheduledTask.sec_timeMillis);
+      Serial.print("ms, Repeat: "); Serial.print(Execute.repeat_counter + 1);
       Serial.print("/"); Serial.print(NowScheduledTask.sec_repeat);
-      Serial.print(", INV:"); Serial.println(NowScheduledTask.sec_rotation);
+      Serial.print(", Rotate: "); Serial.println(NowScheduledTask.sec_rotation);
     }
 
     Color.println();
@@ -1051,9 +1130,8 @@ long executeNextProgramming(taskScheduling pGrm, boolean vPrint = false) {
 }
 
 void sec_reset() {
-  //set_out(0);
   out_clear();
-  write_74HC595(execSec.Array_IC);
+  write_74HC595(Execute.array_IC);
   //
   libColor Color;
   Color.begin(pinRED, pinGREEN, pinBLUE);
@@ -1061,9 +1139,9 @@ void sec_reset() {
 }
 
 void sec_pause() {
-  //set_out(0);
+  //out_set_value(0);
   //out_clear();
-  //write_74HC595(execSec.Array_IC);
+  //write_74HC595(Execute.array_IC);
   //
   //libColor Color;
   //Color.begin(pinRED, pinGREEN, pinBLUE);

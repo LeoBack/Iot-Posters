@@ -136,17 +136,18 @@ boolean libWiFi::wifi_STA(bool useStaticIP) {
   if (useStaticIP)
     WiFi.config(ip, gateway, subnet);
 
-  Serial.printf("Hostname por defecto: %s/n", WiFi.hostname().c_str());
-  WiFi.hostname(DOMAIN_NAME);
-  Serial.printf("Nuevo hostname: %s/n", WiFi.hostname().c_str());
+  Serial.printf("Hostname por defecto: %s\n", WiFi.hostname().c_str());
+  //WiFi.hostname(DOMAIN_NAME);
 
-  //  if (!MDNS.begin(DOMAIN_NAME))
-  //    Serial.println("Error al inicinar mDNS.");
-  //  else {
-  //    Serial.println("Run mDNS");
-  //    // Add service to MDNS-SD
-  //    MDNS.addService("http", "tcp", 80);
-  //  }
+
+    if (!MDNS.begin(DOMAIN_NAME))
+      Serial.println("Error al inicinar mDNS.");
+    else {
+      Serial.println("Run mDNS");
+      // Add service to MDNS-SD
+      //MDNS.addService("http", "tcp", 80);
+    }
+  
   //WL_NO_SHIELD: 255
   //WL_IDLE_STATUS: 0
   //WL_NO_SSID_AVAIL: 1
@@ -176,17 +177,14 @@ boolean libWiFi::wifi_STA(bool useStaticIP) {
   //      Serial.print(" ."); Serial.println(status);
   //      delay(1000);
   //    }
-
-  //  status = WiFi.status();
-
-  Serial.println("");
-  //  Serial.print("Status:\t"); Serial.println(status);
-  Serial.print("Initiated STA:\t"); Serial.println(_ssid);
-  Serial.print("IP address:\t");
-  //  if (isValid)
-  Serial.println(WiFi.localIP());
-  //  else
-  //    Serial.print(WiFi.localIP()); Serial.println("\t- Invalid configuration.");
+  //status = WiFi.status();
+  //Serial.print("Status:\t"); Serial.println(status);
+  
+  Serial.println("Initiated STA");
+  Serial.printf("SSID: %s\n", WiFi.SSID().c_str());
+  Serial.printf("IP address: %d.%d.%d.%d\n", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+  Serial.printf("MAC address: %s\n", WiFi.softAPmacAddress().c_str());
+  Serial.printf("Hostname: %s\n", WiFi.hostname().c_str());
 
   return  isValid;
 }
