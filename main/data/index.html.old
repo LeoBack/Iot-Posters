@@ -52,16 +52,12 @@
                 </a>
                 -->
                 <a class="mdl-navigation__link" href="#" onclick="main_onload()">Recargar</a>
-                <!--<a class="mdl-navigation__link" href="#" onclick="set_std()">Ver tareas</a>
-                <a class="mdl-navigation__link" href="#" onclick="set_std()">Habilita tareas</a>-->
                 <a class="mdl-navigation__link" href="#" onclick="set_clock()">Sincronizar reloj</a>
                 <a class="mdl-navigation__link" href="#" onclick="set_std_status()">On/Off</a>
-                <a class="mdl-navigation__link" href="#" onclick="set_test()">TEST</a>
             </nav>
         </div>
 
         <!-- Detalles -->
-        <!--
         <div class="mdl-grid mdl-shadow--2dp">
             <div class="mdl-cell mdl-cell--2-col mdl-shadow--2dp">
                 <h6>Encabezado</h6>
@@ -503,7 +499,6 @@
                 <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">Descartar</button>
             </div>
         </div>
-        -->
 
         <footer class="mdl-mega-footer">
             <div class="mdl-mega-footer__middle-section">
@@ -524,6 +519,7 @@
     </div>
 </body>
 
-<script src="js/vue.js"></script>
-<script src="vendor/material.js"></script>
+
+<script type="text/javascript" src="vendor/material.js"></script>
+
 </html>
