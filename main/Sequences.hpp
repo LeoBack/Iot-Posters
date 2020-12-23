@@ -16,43 +16,32 @@ struct Execute_sec
   byte out_default = 0x00;      // Estado inicial de la salida
 };
 
-struct NOW_scheduledTask
-{
+struct NOW_scheduledTask {
   unsigned int sec_select = 0;   // Secuencia seleccionada
   unsigned int sec_index = 1;    // Secuencia a ejecutar.
   String sec_Rgb = "000000";     // Color de toda la secuencia.
   long sec_timeMillis = 100;     // Tiempo de cada paso.
-  unsigned int sec_rotation = 0; // Invierte o no el sentido de ejecucion.
+  boolean sec_rotation = false; // Invierte o no el sentido de ejecucion.
   unsigned int sec_repeat = 0;   // Cantidad de veces que se debe ejecutar.
 };
 
-struct taskScheduling
-{
-  String name = "NameDefault";
-  unsigned int enable = 1;
-  DateTime iniDate = DateTime(2020, 1, 1);
-  DateTime endDate = DateTime(2030, 12, 30);
-  unsigned int sec1_index = 0;
-  String sec1_rgb = "000000";
-  unsigned int sec1_millis = 0;
-  unsigned int sec1_rotation = 0;
-  unsigned int sec1_repeat = 1;
-  unsigned int sec2_index = 0;
-  String sec2_rgb = "000000";
-  unsigned int sec2_millis = 0;
-  unsigned int sec2_rotation = 0;
-  unsigned int sec2_repeat = 1;
-  unsigned int sec3_index = 0;
-  String sec3_rgb = "000000";
-  unsigned int sec3_millis = 0;
-  unsigned int sec3_rotation = 0;
-  unsigned int sec3_repeat = 1;
-  unsigned int sec4_index = 0;
-  String sec4_rgb = "000000";
-  unsigned int sec4_millis = 0;
-  unsigned int sec4_rotation = 0;
-  unsigned int sec4_repeat = 1;
+struct taskSchedulingSec {
+  unsigned int sec_index = 0;
+  String sec_rgb = "000000";
+  unsigned int sec_millis = 0;
+  boolean sec_rotation = false;
+  unsigned int sec_repeat = 1;
 };
+
+struct taskScheduling {
+  unsigned int id = 0;
+  String name = "Task_name_default";
+  boolean enable = true;
+  DateTime iniDate = DateTime(2020, 1, 1);
+  DateTime endDate = DateTime(2030, 12, 30, 23, 59, 59);
+  taskSchedulingSec TaskSec[MAX_SECUENCES];
+};
+
 
 taskScheduling pGrm;
 NOW_scheduledTask NowScheduledTask;
@@ -478,221 +467,137 @@ void sec_on(boolean vPrint = false)
 
 //---Lectura/Escritura-----------------------------------------------
 
-boolean readProgramHeader(String vName, boolean vPrint = false)
-{
+// OK - 20/12/23 - TEST
+boolean readProgramHeader(String vName, boolean vPrint = false) {
   File configFile = SPIFFS.open(vName, "r");
-  if (!configFile)
-  {
+  if (!configFile) {
     Serial.println("Failed to open file");
     return false;
   }
 
-  if (configFile.size() > 1024)
-  {
+  if (configFile.size() > 1024) {
     Serial.println("Config file size is too large");
     return false;
   }
 
   ESP.wdtFeed();
 
-  StaticJsonDocument<800> doc;
+  StaticJsonDocument<700> doc;
   DeserializationError error = deserializeJson(doc, configFile);
-  if (error)
-  {
+
+  if (error) {
     Serial.println("Error deserializing file");
     return false;
   }
 
+  const unsigned int id = doc["id"];
   const char *name = doc["name"];
-  const unsigned int enable = doc["enable"];
+  const boolean enable = doc["enable"];
   const char *iniDate = doc["iniDate"];
   const char *endDate = doc["endDate"];
+  pGrm.id = id;
   pGrm.name = name;
   pGrm.enable = enable;
   pGrm.iniDate = R.stringToDatetime(iniDate);
   pGrm.endDate = R.stringToDatetime(endDate);
 
-  if (vPrint)
-  {
-    Serial.println("--- Configuracion leida ---");
-    Serial.print("name= ");
-    Serial.println(pGrm.name);
-    Serial.print("enable= ");
-    Serial.println(pGrm.enable);
-    Serial.print("iniDate= ");
-    Serial.println(R.datetimeToString(pGrm.iniDate));
-    Serial.print("endDate= ");
-    Serial.println(R.datetimeToString(pGrm.endDate));
+  if (vPrint) {
+    Serial.println("--- Encabezados leidos ---");
+    Serial.printf("id= %d\n", pGrm.id);
+    Serial.printf("name= %s\n", pGrm.name.c_str());
+    Serial.printf("enable= %s\n", (pGrm.enable ? "true" : "false"));
+    Serial.printf("iniDate= %s\n", R.datetimeToString(pGrm.iniDate).c_str());
+    Serial.printf("endDate= %s\n", R.datetimeToString(pGrm.endDate).c_str());
     Serial.println("---------------------------");
   }
 
   return true;
 }
 
-boolean readProgram(String vName, boolean vPrint = false)
-{
+// OK - 20/12/23
+boolean readProgram(String vName, boolean vPrint = false) {
   File configFile = SPIFFS.open(vName, "r");
-  if (!configFile)
-  {
+  if (!configFile) {
     Serial.println("Failed to open file");
     return false;
   }
 
-  if (configFile.size() > 1024)
-  {
+  if (configFile.size() > 1024) {
     Serial.println("Config file size is too large");
     return false;
   }
 
-  StaticJsonDocument<800> doc;
+  StaticJsonDocument<700> doc;
   DeserializationError error = deserializeJson(doc, configFile);
-  if (error)
-  {
-    Serial.println("Error deserializing file");
+  if (error) {
+    Serial.print("Error deserializing file: ");
+    Serial.println(vName);
     return false;
   }
 
+  const unsigned int id = doc["id"];
   const char *name = doc["name"];
-  const unsigned int enable = doc["enable"];
+  const boolean enable = doc["enable"];
   const char *iniDate = doc["iniDate"];
   const char *endDate = doc["endDate"];
   pGrm.name = name;
   pGrm.enable = enable;
   pGrm.iniDate = R.stringToDatetime(iniDate);
   pGrm.endDate = R.stringToDatetime(endDate);
+  for (int i = 0; i < MAX_SECUENCES; i++) {
+    String sec = "secuence_" + String(i);
+    const unsigned int sec_index = doc[sec]["sec_index"];
+    const char *sec_rgb = doc[sec]["sec_rgb"];
+    const unsigned int sec_millis = doc[sec]["sec_millis"];
+    const boolean sec_rotation = doc[sec]["sec_rotation"];
+    const unsigned int sec_repeat = doc[sec]["sec_repeat"];
+    pGrm.id = id;
+    pGrm.TaskSec[i].sec_index = sec_index;
+    pGrm.TaskSec[i].sec_rgb = sec_rgb;
+    pGrm.TaskSec[i].sec_millis = sec_millis;
+    pGrm.TaskSec[i].sec_rotation = sec_rotation;
+    pGrm.TaskSec[i].sec_repeat = sec_repeat;
+  }
+  ESP.wdtFeed();
 
-  const unsigned int sec1_index = doc["sec1_index"];
-  const char *sec1_rgb = doc["sec1_rgb"];
-  const unsigned int sec1_millis = doc["sec1_millis"];
-  const unsigned int sec1_rotation = doc["sec1_rotation"];
-  const unsigned int sec1_repeat = doc["sec1_repeat"];
-  pGrm.sec1_index = sec1_index;
-  pGrm.sec1_rgb = sec1_rgb;
-  pGrm.sec1_millis = sec1_millis;
-  pGrm.sec1_rotation = sec1_rotation;
-  pGrm.sec1_repeat = sec1_repeat;
-
-  const unsigned int sec2_index = doc["sec2_index"];
-  const char *sec2_rgb = doc["sec2_rgb"];
-  const unsigned int sec2_millis = doc["sec2_millis"];
-  const unsigned int sec2_rotation = doc["sec2_rotation"];
-  const unsigned int sec2_repeat = doc["sec2_repeat"];
-  pGrm.sec2_index = sec2_index;
-  pGrm.sec2_rgb = sec2_rgb;
-  pGrm.sec2_millis = sec2_millis;
-  pGrm.sec2_rotation = sec2_rotation;
-  pGrm.sec2_repeat = sec2_repeat;
-
-  const unsigned int sec3_index = doc["sec3_index"];
-  const char *sec3_rgb = doc["sec3_rgb"];
-  const unsigned int sec3_millis = doc["sec3_millis"];
-  const unsigned int sec3_rotation = doc["sec3_rotation"];
-  const unsigned int sec3_repeat = doc["sec3_repeat"];
-  pGrm.sec3_index = sec3_index;
-  pGrm.sec3_rgb = sec3_rgb;
-  pGrm.sec3_millis = sec3_millis;
-  pGrm.sec3_rotation = sec3_rotation;
-  pGrm.sec3_repeat = sec3_repeat;
-
-  const unsigned int sec4_index = doc["sec4_index"];
-  const char *sec4_rgb = doc["sec4_rgb"];
-  const unsigned int sec4_millis = doc["sec4_millis"];
-  const unsigned int sec4_rotation = doc["sec4_rotation"];
-  const unsigned int sec4_repeat = doc["sec4_repeat"];
-  pGrm.sec4_index = sec4_index;
-  pGrm.sec4_rgb = sec4_rgb;
-  pGrm.sec4_millis = sec4_millis;
-  pGrm.sec4_rotation = sec4_rotation;
-  pGrm.sec4_repeat = sec4_repeat;
-
-  if (vPrint)
-  {
+  if (vPrint) {
     Serial.println("--- Configuracion leida ---");
-    Serial.print("name= ");
-    Serial.println(pGrm.name);
-    Serial.print("enable= ");
-    Serial.println(pGrm.enable);
-    Serial.print("iniDate= ");
-    Serial.println(R.datetimeToString(pGrm.iniDate));
-    Serial.print("endDate= ");
-    Serial.println(R.datetimeToString(pGrm.endDate));
-    Serial.print("sec1_index= ");
-    Serial.println(pGrm.sec1_index);
-    Serial.print("sec1_rgb= ");
-    Serial.println(pGrm.sec1_rgb);
-    Serial.print("sec1_millis= ");
-    Serial.println(pGrm.sec1_millis);
-    Serial.print("sec1_rotation= ");
-    Serial.println(pGrm.sec1_rotation);
-    Serial.print("sec1_repeat= ");
-    Serial.println(pGrm.sec1_repeat);
-    Serial.print("sec2_index= ");
-    Serial.println(pGrm.sec2_index);
-    Serial.print("sec2_rgb= ");
-    Serial.println(pGrm.sec2_rgb);
-    Serial.print("sec2_millis= ");
-    Serial.println(pGrm.sec2_millis);
-    Serial.print("sec2_rotation= ");
-    Serial.println(pGrm.sec2_rotation);
-    Serial.print("sec2_repeat= ");
-    Serial.println(pGrm.sec2_repeat);
-    Serial.print("sec3_index= ");
-    Serial.println(pGrm.sec3_index);
-    Serial.print("sec3_rgb= ");
-    Serial.println(pGrm.sec3_rgb);
-    Serial.print("sec3_millis= ");
-    Serial.println(pGrm.sec3_millis);
-    Serial.print("sec3_rotation= ");
-    Serial.println(pGrm.sec3_rotation);
-    Serial.print("sec3_repeat= ");
-    Serial.println(pGrm.sec3_repeat);
-    Serial.print("sec4_index= ");
-    Serial.println(pGrm.sec4_index);
-    Serial.print("sec4_rgb= ");
-    Serial.println(pGrm.sec4_rgb);
-    Serial.print("sec4_millis= ");
-    Serial.println(pGrm.sec4_millis);
-    Serial.print("sec4_rotation= ");
-    Serial.println(pGrm.sec4_rotation);
-    Serial.print("sec4_repeat= ");
-    Serial.println(pGrm.sec4_repeat);
+    Serial.printf("id= %d\n", pGrm.id);
+    Serial.printf("name= %s\n", pGrm.name.c_str());
+    Serial.printf("enable= %s\n", (pGrm.enable ? "true" : "false"));
+    Serial.printf("iniDate= %s\n", R.datetimeToString(pGrm.iniDate).c_str());
+    Serial.printf("endDate= %s\n", R.datetimeToString(pGrm.endDate).c_str());
+    for (int i = 0; i < MAX_SECUENCES; i++) {
+      Serial.printf("# Secuence_%d\n", i);
+      Serial.printf("sec_index= %d\n", pGrm.TaskSec[i].sec_index);
+      Serial.printf("sec_rgb= %s\n", pGrm.TaskSec[i].sec_rgb.c_str());
+      Serial.printf("sec_millis= %d\n", pGrm.TaskSec[i].sec_millis);
+      Serial.printf("sec_rotation= %s\n", (pGrm.TaskSec[i].sec_rotation ? "true" : "false"));
+      Serial.printf("sec_repeat= %d\n", pGrm.TaskSec[i].sec_repeat);
+    }
     Serial.println("---------------------------");
   }
 
   return true;
 }
 
+// OK - 20/12/23 - TEST
 boolean saveProgram(taskScheduling vPgrm, boolean vPrint = false) {
-  StaticJsonDocument<700> doc;
-
+  StaticJsonDocument<600> doc;
+  doc["id"] = pGrm.id;
   doc["name"] = vPgrm.name;
   doc["enable"] = vPgrm.enable;
   doc["iniDate"] = R.datetimeToString(vPgrm.iniDate);
   doc["endDate"] = R.datetimeToString(vPgrm.endDate);
-
-  doc["sec1_index"] = vPgrm.sec1_index;
-  doc["sec1_rgb"] = vPgrm.sec1_rgb;
-  doc["sec1_millis"] = vPgrm.sec1_millis;
-  doc["sec1_rotation"] = vPgrm.sec1_rotation;
-  doc["sec1_repeat"] = vPgrm.sec1_repeat;
-
-  doc["sec2_index"] = vPgrm.sec2_index;
-  doc["sec2_rgb"] = vPgrm.sec2_rgb;
-  doc["sec2_millis"] = vPgrm.sec2_millis;
-  doc["sec2_rotation"] = vPgrm.sec2_rotation;
-  doc["sec2_repeat"] = vPgrm.sec2_repeat;
-
-  doc["sec3_index"] = vPgrm.sec3_index;
-  doc["sec3_rgb"] = vPgrm.sec3_rgb;
-  doc["sec3_millis"] = vPgrm.sec3_millis;
-  doc["sec3_rotation"] = vPgrm.sec3_rotation;
-  doc["sec3_repeat"] = vPgrm.sec3_repeat;
-
-  doc["sec4_index"] = vPgrm.sec4_index;
-  doc["sec4_rgb"] = vPgrm.sec4_rgb;
-  doc["sec4_millis"] = vPgrm.sec4_millis;
-  doc["sec4_rotation"] = vPgrm.sec4_rotation;
-  doc["sec4_repeat"] = vPgrm.sec4_repeat;
+  for (int i = 0; i < MAX_SECUENCES; i++) {
+    JsonObject obj = doc.createNestedObject("secuence_" + String(i));
+    obj["sec_index"] = vPgrm.TaskSec[i].sec_index;
+    obj["sec_rgb"] = vPgrm.TaskSec[i].sec_rgb;
+    obj["sec_millis"] = vPgrm.TaskSec[i].sec_millis;
+    obj["sec_rotation"] = vPgrm.TaskSec[i].sec_rotation;
+    obj["sec_repeat"] = vPgrm.TaskSec[i].sec_repeat;
+  }
+  ESP.wdtFeed();
 
   String nameFile = DIR_PROGRAM + '/' + vPgrm.name + ".json";
   File configFile = SPIFFS.open(nameFile, "w");
@@ -707,82 +612,6 @@ boolean saveProgram(taskScheduling vPgrm, boolean vPrint = false) {
 
   return true;
 }
-//--------------------------------------------------------------------------
-
-struct Temp {
-  String secName = "";
-  long duration = 0;
-  DateTime iniDate = DateTime(2020, 1, 1);
-  DateTime endDate = DateTime(2030, 12, 30);
-};
-
-Temp temp;
-
-boolean readTemp(boolean vPrint = false)
-{
-  File tempFile = SPIFFS.open(TEMP, "r");
-  if (!tempFile) {
-    Serial.println("Failed to open file");
-    return false;
-  }
-  if (tempFile.size() > 1024) {
-    Serial.println("Config file size is too large");
-    return false;
-  }
-
-  StaticJsonDocument<800> doc;
-  DeserializationError error = deserializeJson(doc, tempFile);
-  if (error) {
-    Serial.println("Error deserializing file");
-    return false;
-  }
-
-  const char *secName = doc["secName"];
-  const long duration = doc["duration"];
-  const char *iniDate = doc["iniDate"];
-  const char *endDate = doc["endDate"];
-  temp.secName = secName;
-  temp.duration = duration;
-  temp.iniDate = R.stringToDatetime(iniDate);
-  temp.endDate = R.stringToDatetime(endDate);
-
-  if (vPrint) {
-    Serial.println("--- Temporal leido ---");
-    Serial.print("secName= ");
-    Serial.println(temp.secName);
-    Serial.print("duration= ");
-    Serial.println(temp.duration);
-    Serial.print("iniDate= ");
-    Serial.println(R.datetimeToString(temp.iniDate));
-    Serial.print("endDate= ");
-    Serial.println(R.datetimeToString(temp.endDate));
-    Serial.println("---------------------------");
-  }
-
-  return true;
-}
-
-boolean saveTemp(boolean vPrint = false)
-{
-  StaticJsonDocument<700> doc;
-  doc["secName"] = temp.secName;
-  doc["duration"] = temp.duration;
-  doc["iniDate"] = R.datetimeToString(temp.iniDate);
-  doc["endDate"] = R.datetimeToString(temp.endDate);
-
-  File tempFile = SPIFFS.open(TEMP, "w");
-  if (!tempFile){
-    Serial.println("Error opening configuration file for writing");
-    return false;
-  }
-  serializeJson(doc, tempFile);
-
-  if (vPrint)
-    Serial.println("Temporal guardado");
-
-  return true;
-}
-
 //--------------------------------------------------------------------------
 
 TimeSpan timeProgram(DateTime dtIni, DateTime dtEnd, DateTime dtNOW) {
@@ -900,7 +729,7 @@ taskScheduling FindScheduleFile(boolean vPrint = false) {
       Serial.print("\tDuration= "); Serial.println(R.toStringTimeSpan(timeRunTask.totalseconds()));
       Serial.print("\t\tTime to run= "); Serial.println(R.toStringTimeSpan(tsDiffEnable.totalseconds()));
 
-      if (EnableTime & !DisableTime){
+      if (EnableTime & !DisableTime) {
         if (pTemp.name == "NameDefault") {
           pTemp = pGrm;
           Serial.print("TEST #2.1- Default=");
@@ -928,31 +757,13 @@ taskScheduling FindScheduleFile(boolean vPrint = false) {
   pSelect.name = pGrm.name;
   pSelect.iniDate = pGrm.iniDate;
   pSelect.endDate = pGrm.endDate;
-
-  pSelect.sec1_index = pGrm.sec1_index;
-  pSelect.sec1_rgb = pGrm.sec1_rgb;
-  pSelect.sec1_millis = pGrm.sec1_millis;
-  pSelect.sec1_rotation = pGrm.sec1_rotation;
-  pSelect.sec1_repeat = pGrm.sec1_repeat;
-
-  pSelect.sec2_index = pGrm.sec2_index;
-  pSelect.sec2_rgb = pGrm.sec2_rgb;
-  pSelect.sec2_millis = pGrm.sec2_millis;
-  pSelect.sec2_rotation = pGrm.sec2_rotation;
-  pSelect.sec2_repeat = pGrm.sec2_repeat;
-
-  pSelect.sec3_index = pGrm.sec3_index;
-  pSelect.sec3_rgb = pGrm.sec3_rgb;
-  pSelect.sec3_millis = pGrm.sec3_millis;
-  pSelect.sec3_rotation = pGrm.sec3_rotation;
-  pSelect.sec3_repeat = pGrm.sec3_repeat;
-
-  pSelect.sec4_index = pGrm.sec4_index;
-  pSelect.sec4_rgb = pGrm.sec4_rgb;
-  pSelect.sec4_millis = pGrm.sec4_millis;
-  pSelect.sec4_rotation = pGrm.sec4_rotation;
-  pSelect.sec4_repeat = pGrm.sec4_repeat;
-
+  for (int i = 0; i < MAX_SECUENCES; i++) {
+    pSelect.TaskSec[i].sec_index = pGrm.TaskSec[i].sec_index;
+    pSelect.TaskSec[i].sec_rgb = pGrm.TaskSec[i].sec_rgb;
+    pSelect.TaskSec[i].sec_millis = pGrm.TaskSec[i].sec_millis;
+    pSelect.TaskSec[i].sec_rotation = pGrm.TaskSec[i].sec_rotation;
+    pSelect.TaskSec[i].sec_repeat = pGrm.TaskSec[i].sec_repeat;
+  }
   return pSelect;
 }
 
@@ -996,7 +807,7 @@ void Secuences_Menu(String command, String parameters) {
     NowScheduledTask.sec_select = 8;
   else if (command == "help")
     help();
-  else 
+  else
     Serial.println("SECMODE - Invalid command. Type help");
 }
 
@@ -1040,15 +851,107 @@ void sec_execute(boolean vPrint = false) {
   }
 }
 
+//long executeNextProgramming(taskScheduling pGrm, boolean vPrint = false) {
+//  if (pGrm.name != "NameDefault") {
+//    libColor Color;
+//    Color.begin(pinRED, pinGREEN, pinBLUE);
+//    int maxSelect = 0;
+//    maxSelect = pGrm.sec1_index != 0 ? maxSelect + 1 : maxSelect;
+//    maxSelect = pGrm.sec2_index != 0 ? maxSelect + 1 : maxSelect;
+//    maxSelect = pGrm.sec3_index != 0 ? maxSelect + 1 : maxSelect;
+//    maxSelect = pGrm.sec4_index != 0 ? maxSelect + 1 : maxSelect;
+//
+//    if (Execute.is_completed) {
+//      Execute.repeat_counter++;
+//      if (!(Execute.repeat_counter < NowScheduledTask.sec_repeat)) {
+//        NowScheduledTask.sec_index = NowScheduledTask.sec_index < maxSelect ? NowScheduledTask.sec_index + 1 : 1;
+//        Execute.repeat_counter = 0;
+//      }
+//    }
+//
+//    switch (NowScheduledTask.sec_index) {
+//      case 1: {
+//          NowScheduledTask.sec_select = pGrm.sec1_index;
+//          NowScheduledTask.sec_Rgb = pGrm.sec1_rgb;
+//          NowScheduledTask.sec_timeMillis = pGrm.sec1_millis;
+//          NowScheduledTask.sec_rotation = pGrm.sec1_rotation;
+//          NowScheduledTask.sec_repeat = pGrm.sec1_repeat;
+//          break;
+//        }
+//      case 2: {
+//          NowScheduledTask.sec_select = pGrm.sec2_index;
+//          NowScheduledTask.sec_Rgb = pGrm.sec2_rgb;
+//          NowScheduledTask.sec_timeMillis = pGrm.sec2_millis;
+//          NowScheduledTask.sec_rotation = pGrm.sec2_rotation;
+//          NowScheduledTask.sec_repeat = pGrm.sec2_repeat;
+//          break;
+//        }
+//      case 3: {
+//          NowScheduledTask.sec_select = pGrm.sec3_index;
+//          NowScheduledTask.sec_Rgb = pGrm.sec3_rgb;
+//          NowScheduledTask.sec_timeMillis = pGrm.sec3_millis;
+//          NowScheduledTask.sec_rotation = pGrm.sec3_rotation;
+//          NowScheduledTask.sec_repeat = pGrm.sec3_repeat;
+//          break;
+//        }
+//      case 4: {
+//          NowScheduledTask.sec_select = pGrm.sec4_index;
+//          NowScheduledTask.sec_Rgb = pGrm.sec4_rgb;
+//          NowScheduledTask.sec_timeMillis = pGrm.sec4_millis;
+//          NowScheduledTask.sec_rotation = pGrm.sec4_rotation;
+//          NowScheduledTask.sec_repeat = pGrm.sec4_repeat;
+//          break;
+//        }
+//      default: {
+//          NowScheduledTask.sec_select = 0;
+//          NowScheduledTask.sec_Rgb = "000000";
+//          NowScheduledTask.sec_timeMillis = 0;
+//          NowScheduledTask.sec_rotation = 0;
+//          NowScheduledTask.sec_repeat = 1;
+//          break;
+//        }
+//    }
+//
+//    Color.Rgb = NowScheduledTask.sec_Rgb;
+//    Execute.rotation = NowScheduledTask.sec_rotation;
+//
+//    if (DEBUG) {
+//      float total_progress = maxSelect * NowScheduledTask.sec_repeat;
+//      float now_progress = NowScheduledTask.sec_index * (Execute.repeat_counter + 1);
+//      float exec_percent = (now_progress * 100) / total_progress;
+//
+//      Serial.println("---");
+//      Serial.print("#0 Progress: "); Serial.print(exec_percent); Serial.print("%");
+//      Serial.print(" Logic denied: "); Serial.println(INV_POLARITY);
+//      Serial.print("#1 Task: "); Serial.print(pGrm.name);
+//      Serial.print(", Sec_ID: "); Serial.print(NowScheduledTask.sec_select);
+//      Serial.print(", Item: "); Serial.print(NowScheduledTask.sec_index);
+//      Serial.print("/"); Serial.print(maxSelect);
+//      Serial.print(", Time: "); Serial.print(NowScheduledTask.sec_timeMillis);
+//      Serial.print("ms, Repeat: "); Serial.print(Execute.repeat_counter + 1);
+//      Serial.print("/"); Serial.print(NowScheduledTask.sec_repeat);
+//      Serial.print(", Rotate: "); Serial.println(NowScheduledTask.sec_rotation);
+//    }
+//
+//    Color.println();
+//    sec_execute(vPrint);
+//  }
+//
+//  return NowScheduledTask.sec_timeMillis;
+//}
+
 long executeNextProgramming(taskScheduling pGrm, boolean vPrint = false) {
-  if (pGrm.name != "NameDefault") {
+
+  if (pGrm.id != 0) {
+
     libColor Color;
     Color.begin(pinRED, pinGREEN, pinBLUE);
+
     int maxSelect = 0;
-    maxSelect = pGrm.sec1_index != 0 ? maxSelect + 1 : maxSelect;
-    maxSelect = pGrm.sec2_index != 0 ? maxSelect + 1 : maxSelect;
-    maxSelect = pGrm.sec3_index != 0 ? maxSelect + 1 : maxSelect;
-    maxSelect = pGrm.sec4_index != 0 ? maxSelect + 1 : maxSelect;
+    for (int i = 0; i < MAX_SECUENCES; i++) {
+      if (pGrm.TaskSec[i].sec_index != 0)
+        maxSelect++;
+    }
 
     if (Execute.is_completed) {
       Execute.repeat_counter++;
@@ -1058,48 +961,11 @@ long executeNextProgramming(taskScheduling pGrm, boolean vPrint = false) {
       }
     }
 
-    switch (NowScheduledTask.sec_index) {
-      case 1: {
-          NowScheduledTask.sec_select = pGrm.sec1_index;
-          NowScheduledTask.sec_Rgb = pGrm.sec1_rgb;
-          NowScheduledTask.sec_timeMillis = pGrm.sec1_millis;
-          NowScheduledTask.sec_rotation = pGrm.sec1_rotation;
-          NowScheduledTask.sec_repeat = pGrm.sec1_repeat;
-          break;
-        }
-      case 2: {
-          NowScheduledTask.sec_select = pGrm.sec2_index;
-          NowScheduledTask.sec_Rgb = pGrm.sec2_rgb;
-          NowScheduledTask.sec_timeMillis = pGrm.sec2_millis;
-          NowScheduledTask.sec_rotation = pGrm.sec2_rotation;
-          NowScheduledTask.sec_repeat = pGrm.sec2_repeat;
-          break;
-        }
-      case 3: {
-          NowScheduledTask.sec_select = pGrm.sec3_index;
-          NowScheduledTask.sec_Rgb = pGrm.sec3_rgb;
-          NowScheduledTask.sec_timeMillis = pGrm.sec3_millis;
-          NowScheduledTask.sec_rotation = pGrm.sec3_rotation;
-          NowScheduledTask.sec_repeat = pGrm.sec3_repeat;
-          break;
-        }
-      case 4: {
-          NowScheduledTask.sec_select = pGrm.sec4_index;
-          NowScheduledTask.sec_Rgb = pGrm.sec4_rgb;
-          NowScheduledTask.sec_timeMillis = pGrm.sec4_millis;
-          NowScheduledTask.sec_rotation = pGrm.sec4_rotation;
-          NowScheduledTask.sec_repeat = pGrm.sec4_repeat;
-          break;
-        }
-      default: {
-          NowScheduledTask.sec_select = 0;
-          NowScheduledTask.sec_Rgb = "000000";
-          NowScheduledTask.sec_timeMillis = 0;
-          NowScheduledTask.sec_rotation = 0;
-          NowScheduledTask.sec_repeat = 1;
-          break;
-        }
-    }
+    NowScheduledTask.sec_select = pGrm.TaskSec[NowScheduledTask.sec_index].sec_index;
+    NowScheduledTask.sec_Rgb = pGrm.TaskSec[NowScheduledTask.sec_index].sec_rgb;
+    NowScheduledTask.sec_timeMillis = pGrm.TaskSec[NowScheduledTask.sec_index].sec_millis;
+    NowScheduledTask.sec_rotation = pGrm.TaskSec[NowScheduledTask.sec_index].sec_rotation;
+    NowScheduledTask.sec_repeat = pGrm.TaskSec[NowScheduledTask.sec_index].sec_repeat;
 
     Color.Rgb = NowScheduledTask.sec_Rgb;
     Execute.rotation = NowScheduledTask.sec_rotation;
@@ -1110,6 +976,17 @@ long executeNextProgramming(taskScheduling pGrm, boolean vPrint = false) {
       float exec_percent = (now_progress * 100) / total_progress;
 
       Serial.println("---");
+      // Serial.printf("#0 Progress:  %d%", exec_percent);
+      // Serial.printf(" Logic denied: %s\n", INV_POLARITY);
+      // Serial.printf("#1 Task: %s ", pGrm.name.c_str());
+      // Serial.printf(", Sec_ID: %s\n", pGrm.TaskSec[NowScheduledTask.sec_index].sec_select);
+      // Serial.printf(", Item: %s\n", pGrm.TaskSec[NowScheduledTask.sec_index].sec_index);
+      // Serial.printf("/ %s\n", maxSelect);
+      // Serial.printf(", Time: %s\n", pGrm.TaskSec[NowScheduledTask.sec_index].sec_timeMillis);
+      // Serial.printf("ms, Repeat: %s\n", Execute.repeat_counter + 1);
+      // Serial.printf("/ %s", pGrm.TaskSec[NowScheduledTask.sec_index].sec_repeat);
+      // Serial.printf(", Rotate: %s\n", pGrm.TaskSec[NowScheduledTask.sec_index].sec_rotation);
+
       Serial.print("#0 Progress: "); Serial.print(exec_percent); Serial.print("%");
       Serial.print(" Logic denied: "); Serial.println(INV_POLARITY);
       Serial.print("#1 Task: "); Serial.print(pGrm.name);

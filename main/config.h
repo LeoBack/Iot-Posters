@@ -22,6 +22,9 @@ const char* ON = "on";
 const char* OFF = "off";
 const char* SEC_INV = "inv";
 
+// Cantidad de secuencias a configurar. 
+const int MAX_SECUENCES = 4;
+
 /*
    Tiempos
 

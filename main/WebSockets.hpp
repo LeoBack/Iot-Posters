@@ -66,7 +66,7 @@ void readTask(String name_task)
 
   Serial.print("WS: Read task: ");
   Serial.println(fileRead);
-
+/*
   if (readProgram(fileRead, false))
   {
     doc["name"] = pGrm.name;
@@ -97,7 +97,7 @@ void readTask(String name_task)
     doc["sec4_millis"] = pGrm.sec4_millis;
     doc["sec4_rotation"] = pGrm.sec4_rotation;
     doc["sec4_repeat"] = pGrm.sec4_repeat;
-  }
+  }*/
   serializeJson(doc, response);
   ws.textAll(response);
 }

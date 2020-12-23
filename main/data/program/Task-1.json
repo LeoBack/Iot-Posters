@@ -1,26 +1,35 @@
 {
+    "id": 1234,
     "name": "Task-1",
-    "enable": "1",
-    "iniDate": "2020-01-01T00:00:00",
-    "endDate": "2030-12-07T23:59:59",
-    "sec1_index": 6,
-    "sec1_rgb": "f5510a",
-    "sec1_millis": 200,
-    "sec1_rotation": 0,
-    "sec1_repeat": 3,
-    "sec2_index": 0,
-    "sec2_rgb": "0000ff",
-    "sec2_millis": 200,
-    "sec2_rotation": 1,
-    "sec2_repeat": 3,
-    "sec3_index": 0,
-    "sec3_rgb": "ff0000",
-    "sec3_millis": 100,
-    "sec3_rotation": 0,
-    "sec3_repeat": 5,
-    "sec4_index": 0,
-    "sec4_rgb": "00ff00",
-    "sec4_millis": 100,
-    "sec4_rotation": 0,
-    "sec4_repeat": 5
+    "enable": true,
+    "iniDate": "2020-1-1T0:0:0",
+    "endDate": "2030-12-31T11:59:59",
+    "secuence_0": {
+        "sec_index": 6,
+        "sec_rgb": "f5510a",
+        "sec_millis": 200,
+        "sec_rotation": false,
+        "sec_repeat": 1
+    },
+    "secuence_1": {
+        "sec_index": 6,
+        "sec_rgb": "ff0000",
+        "sec_millis": 200,
+        "sec_rotation": false,
+        "sec_repeat": 3
+    },
+    "secuence_2": {
+        "sec_index": 0,
+        "sec_rgb": "00ff00",
+        "sec_millis": 200,
+        "sec_rotation": false,
+        "sec_repeat": 5
+    },
+    "secuence_3": {
+        "sec_index": 0,
+        "sec_rgb": "0000ff",
+        "sec_millis": 100,
+        "sec_rotation": false,
+        "sec_repeat": 5
+    }
 }
