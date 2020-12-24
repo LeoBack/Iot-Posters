@@ -717,72 +717,64 @@ taskScheduling FindScheduleFile(boolean vPrint = false) {
       }
 
       // Imprimo
-      Serial.print("# "); Serial.print(countfile);
-      Serial.print(" = "); Serial.print(pGrm.name);
-      Serial.print("\t["); Serial.print(R.datetimeToString(pGrm.iniDate));
-      Serial.print(" - "); Serial.print(R.datetimeToString(pGrm.endDate));
-      Serial.println("]");
-      Serial.print("Valid= "); Serial.print(EnableDate ? "Yes" : "No");
-      Serial.print("\tPeriod= "); Serial.println(R.toStringTimeSpan(duration));
-      Serial.print(EnableTime); Serial.print(" & !"); Serial.print(DisableTime);
-      Serial.print(" = "); Serial.print(EnableTime & !DisableTime);
-      Serial.print("\tDuration= "); Serial.println(R.toStringTimeSpan(timeRunTask.totalseconds()));
-      Serial.print("\t\tTime to run= "); Serial.println(R.toStringTimeSpan(tsDiffEnable.totalseconds()));
+      Serial.println("---");
+      Serial.printf("#%d %s\t", countfile, pGrm.name.c_str());
+      Serial.printf("[%s - %s]\n", R.datetimeToString(pGrm.iniDate).c_str(),R.datetimeToString(pGrm.endDate).c_str());
+      Serial.printf("Valid= %s\t", EnableDate ? "Yes" : "No");
+      Serial.printf("Period= %s\n", R.toStringTimeSpan(duration).c_str());
+      Serial.printf("%d & !%d=%d\t", EnableTime, DisableTime, (EnableTime & !DisableTime));
+      Serial.printf("Duration= %s\n", R.toStringTimeSpan(timeRunTask.totalseconds()).c_str());
+      Serial.printf("\t\tTime to run= %s\n", R.toStringTimeSpan(tsDiffEnable.totalseconds()).c_str());
 
       if (EnableTime & !DisableTime) {
-        if (pTemp.name == "NameDefault") {
+        if (pTemp.id == 0) {
           pTemp = pGrm;
-          Serial.print("TEST #2.1- Default=");
-          Serial.println(pTemp.name);
+          Serial.printf("TEST #2.1- Default= %s\n", pTemp.name.c_str());
         }
         else if (CompareTime(pTemp.iniDate, pGrm.iniDate)) {
           pTemp = pGrm;
-          Serial.print("TEST #2.2- Compare= ");
-          Serial.println(pTemp.name);
+          Serial.printf("TEST #2.2- Compare= %s\n", pTemp.name.c_str());
         }
         else {
           //pTemp = taskScheduling();
-          Serial.print("TEST #2.3- None= ");
-          Serial.println(pTemp.name);
+          Serial.printf("TEST #2.3- None= %s\n", pTemp.name.c_str());
         }
       }
     }
   }
 
-  pGrm = pTemp;
-  Serial.print("Is RUN= ");
-  Serial.println(pGrm.name);
-
+  //pGrm = pTemp;
   taskScheduling pSelect;
-  pSelect.name = pGrm.name;
-  pSelect.iniDate = pGrm.iniDate;
-  pSelect.endDate = pGrm.endDate;
+  pSelect.id = pTemp.id;
+  pSelect.name = pTemp.name;
+  pSelect.iniDate = pTemp.iniDate;
+  pSelect.endDate = pTemp.endDate;
   for (int i = 0; i < MAX_SECUENCES; i++) {
-    pSelect.TaskSec[i].sec_index = pGrm.TaskSec[i].sec_index;
-    pSelect.TaskSec[i].sec_rgb = pGrm.TaskSec[i].sec_rgb;
-    pSelect.TaskSec[i].sec_millis = pGrm.TaskSec[i].sec_millis;
-    pSelect.TaskSec[i].sec_rotation = pGrm.TaskSec[i].sec_rotation;
-    pSelect.TaskSec[i].sec_repeat = pGrm.TaskSec[i].sec_repeat;
+    pSelect.TaskSec[i].sec_index = pTemp.TaskSec[i].sec_index;
+    pSelect.TaskSec[i].sec_rgb = pTemp.TaskSec[i].sec_rgb;
+    pSelect.TaskSec[i].sec_millis = pTemp.TaskSec[i].sec_millis;
+    pSelect.TaskSec[i].sec_rotation = pTemp.TaskSec[i].sec_rotation;
+    pSelect.TaskSec[i].sec_repeat = pTemp.TaskSec[i].sec_repeat;
   }
+
+  Serial.printf("RUN=  %s\n", pSelect.name.c_str());
   return pSelect;
 }
 
 //--------------------------------------------------------------------------
 
 void help() {
-  Serial.println("SECMODE - Help");
-  Serial.println("Modos de secuencia");
-  Serial.print("ID= 1, Name= "); Serial.println(BLINK);
-  Serial.print("ID= 2, Name= "); Serial.println(EVEN_OR_ODD);
-  Serial.print("ID= 3, Name= "); Serial.println(MOBILE_POINT);
-  Serial.print("ID= 4, Name= "); Serial.println(MOBILE_HOLLOW);
-  Serial.print("ID= 5, Name= "); Serial.println(POSITIVE_LADDER);
-  Serial.print("ID= 6, Name= "); Serial.println(NEGATIVE_LADDER);
-  Serial.print("ID= 7, Name= "); Serial.println(ON);
-  Serial.print("ID= 8, Name= "); Serial.println(OFF);
-  Serial.print("Modificador= "); Serial.println(SEC_INV);
-  Serial.println("help       \t - Manual de intrucciones.");
-  Serial.println();
+  Serial.printf("SECMODE - Help\nModos de secuencia\n");
+  Serial.printf("ID= 1, Name= %s\n", BLINK);
+  Serial.printf("ID= 2, Name= %s\n", EVEN_OR_ODD);
+  Serial.printf("ID= 3, Name= %s\n", MOBILE_POINT);
+  Serial.printf("ID= 4, Name= %s\n", MOBILE_HOLLOW);
+  Serial.printf("ID= 5, Name= %s\n", POSITIVE_LADDER);
+  Serial.printf("ID= 6, Name= %s\n", NEGATIVE_LADDER);
+  Serial.printf("ID= 7, Name= %s\n", ON);
+  Serial.printf("ID= 8, Name= %s\n", OFF);
+  Serial.printf("Modificador= %s\n", SEC_INV);
+  Serial.println("help       \t - Manual de intrucciones.\n");
 }
 
 void Secuences_Menu(String command, String parameters) {
@@ -851,111 +843,25 @@ void sec_execute(boolean vPrint = false) {
   }
 }
 
-//long executeNextProgramming(taskScheduling pGrm, boolean vPrint = false) {
-//  if (pGrm.name != "NameDefault") {
-//    libColor Color;
-//    Color.begin(pinRED, pinGREEN, pinBLUE);
-//    int maxSelect = 0;
-//    maxSelect = pGrm.sec1_index != 0 ? maxSelect + 1 : maxSelect;
-//    maxSelect = pGrm.sec2_index != 0 ? maxSelect + 1 : maxSelect;
-//    maxSelect = pGrm.sec3_index != 0 ? maxSelect + 1 : maxSelect;
-//    maxSelect = pGrm.sec4_index != 0 ? maxSelect + 1 : maxSelect;
-//
-//    if (Execute.is_completed) {
-//      Execute.repeat_counter++;
-//      if (!(Execute.repeat_counter < NowScheduledTask.sec_repeat)) {
-//        NowScheduledTask.sec_index = NowScheduledTask.sec_index < maxSelect ? NowScheduledTask.sec_index + 1 : 1;
-//        Execute.repeat_counter = 0;
-//      }
-//    }
-//
-//    switch (NowScheduledTask.sec_index) {
-//      case 1: {
-//          NowScheduledTask.sec_select = pGrm.sec1_index;
-//          NowScheduledTask.sec_Rgb = pGrm.sec1_rgb;
-//          NowScheduledTask.sec_timeMillis = pGrm.sec1_millis;
-//          NowScheduledTask.sec_rotation = pGrm.sec1_rotation;
-//          NowScheduledTask.sec_repeat = pGrm.sec1_repeat;
-//          break;
-//        }
-//      case 2: {
-//          NowScheduledTask.sec_select = pGrm.sec2_index;
-//          NowScheduledTask.sec_Rgb = pGrm.sec2_rgb;
-//          NowScheduledTask.sec_timeMillis = pGrm.sec2_millis;
-//          NowScheduledTask.sec_rotation = pGrm.sec2_rotation;
-//          NowScheduledTask.sec_repeat = pGrm.sec2_repeat;
-//          break;
-//        }
-//      case 3: {
-//          NowScheduledTask.sec_select = pGrm.sec3_index;
-//          NowScheduledTask.sec_Rgb = pGrm.sec3_rgb;
-//          NowScheduledTask.sec_timeMillis = pGrm.sec3_millis;
-//          NowScheduledTask.sec_rotation = pGrm.sec3_rotation;
-//          NowScheduledTask.sec_repeat = pGrm.sec3_repeat;
-//          break;
-//        }
-//      case 4: {
-//          NowScheduledTask.sec_select = pGrm.sec4_index;
-//          NowScheduledTask.sec_Rgb = pGrm.sec4_rgb;
-//          NowScheduledTask.sec_timeMillis = pGrm.sec4_millis;
-//          NowScheduledTask.sec_rotation = pGrm.sec4_rotation;
-//          NowScheduledTask.sec_repeat = pGrm.sec4_repeat;
-//          break;
-//        }
-//      default: {
-//          NowScheduledTask.sec_select = 0;
-//          NowScheduledTask.sec_Rgb = "000000";
-//          NowScheduledTask.sec_timeMillis = 0;
-//          NowScheduledTask.sec_rotation = 0;
-//          NowScheduledTask.sec_repeat = 1;
-//          break;
-//        }
-//    }
-//
-//    Color.Rgb = NowScheduledTask.sec_Rgb;
-//    Execute.rotation = NowScheduledTask.sec_rotation;
-//
-//    if (DEBUG) {
-//      float total_progress = maxSelect * NowScheduledTask.sec_repeat;
-//      float now_progress = NowScheduledTask.sec_index * (Execute.repeat_counter + 1);
-//      float exec_percent = (now_progress * 100) / total_progress;
-//
-//      Serial.println("---");
-//      Serial.print("#0 Progress: "); Serial.print(exec_percent); Serial.print("%");
-//      Serial.print(" Logic denied: "); Serial.println(INV_POLARITY);
-//      Serial.print("#1 Task: "); Serial.print(pGrm.name);
-//      Serial.print(", Sec_ID: "); Serial.print(NowScheduledTask.sec_select);
-//      Serial.print(", Item: "); Serial.print(NowScheduledTask.sec_index);
-//      Serial.print("/"); Serial.print(maxSelect);
-//      Serial.print(", Time: "); Serial.print(NowScheduledTask.sec_timeMillis);
-//      Serial.print("ms, Repeat: "); Serial.print(Execute.repeat_counter + 1);
-//      Serial.print("/"); Serial.print(NowScheduledTask.sec_repeat);
-//      Serial.print(", Rotate: "); Serial.println(NowScheduledTask.sec_rotation);
-//    }
-//
-//    Color.println();
-//    sec_execute(vPrint);
-//  }
-//
-//  return NowScheduledTask.sec_timeMillis;
-//}
-
+// OK - 20/12/24
 long executeNextProgramming(taskScheduling pGrm, boolean vPrint = false) {
-
   if (pGrm.id != 0) {
-
     libColor Color;
     Color.begin(pinRED, pinGREEN, pinBLUE);
 
+    // Cantidad de secuencias validas
     int maxSelect = 0;
     for (int i = 0; i < MAX_SECUENCES; i++) {
       if (pGrm.TaskSec[i].sec_index != 0)
         maxSelect++;
     }
 
+    // Finalizo la ejecucion de una secuencia
     if (Execute.is_completed) {
       Execute.repeat_counter++;
-      if (!(Execute.repeat_counter < NowScheduledTask.sec_repeat)) {
+
+      // La secuencia finalizo las repeticiones?
+      if (Execute.repeat_counter > NowScheduledTask.sec_repeat) {
         NowScheduledTask.sec_index = NowScheduledTask.sec_index < maxSelect ? NowScheduledTask.sec_index + 1 : 1;
         Execute.repeat_counter = 0;
       }
@@ -976,27 +882,12 @@ long executeNextProgramming(taskScheduling pGrm, boolean vPrint = false) {
       float exec_percent = (now_progress * 100) / total_progress;
 
       Serial.println("---");
-      // Serial.printf("#0 Progress:  %d%", exec_percent);
-      // Serial.printf(" Logic denied: %s\n", INV_POLARITY);
-      // Serial.printf("#1 Task: %s ", pGrm.name.c_str());
-      // Serial.printf(", Sec_ID: %s\n", pGrm.TaskSec[NowScheduledTask.sec_index].sec_select);
-      // Serial.printf(", Item: %s\n", pGrm.TaskSec[NowScheduledTask.sec_index].sec_index);
-      // Serial.printf("/ %s\n", maxSelect);
-      // Serial.printf(", Time: %s\n", pGrm.TaskSec[NowScheduledTask.sec_index].sec_timeMillis);
-      // Serial.printf("ms, Repeat: %s\n", Execute.repeat_counter + 1);
-      // Serial.printf("/ %s", pGrm.TaskSec[NowScheduledTask.sec_index].sec_repeat);
-      // Serial.printf(", Rotate: %s\n", pGrm.TaskSec[NowScheduledTask.sec_index].sec_rotation);
-
-      Serial.print("#0 Progress: "); Serial.print(exec_percent); Serial.print("%");
-      Serial.print(" Logic denied: "); Serial.println(INV_POLARITY);
-      Serial.print("#1 Task: "); Serial.print(pGrm.name);
-      Serial.print(", Sec_ID: "); Serial.print(NowScheduledTask.sec_select);
-      Serial.print(", Item: "); Serial.print(NowScheduledTask.sec_index);
-      Serial.print("/"); Serial.print(maxSelect);
-      Serial.print(", Time: "); Serial.print(NowScheduledTask.sec_timeMillis);
-      Serial.print("ms, Repeat: "); Serial.print(Execute.repeat_counter + 1);
-      Serial.print("/"); Serial.print(NowScheduledTask.sec_repeat);
-      Serial.print(", Rotate: "); Serial.println(NowScheduledTask.sec_rotation);
+      Serial.printf("#0 Progress:  %f, Logic denied: %s\n", exec_percent, INV_POLARITY == 1 ? "true" : "false");
+      Serial.printf("#1 Task: %s, Sec_ID: %d", pGrm.name.c_str(), NowScheduledTask.sec_select);
+      Serial.printf(", Item: %d/%d", NowScheduledTask.sec_index, maxSelect);
+      Serial.printf(", Time: %dms", NowScheduledTask.sec_timeMillis);
+      Serial.printf(", Repeat: %d/%d", Execute.repeat_counter + 1, NowScheduledTask.sec_repeat);
+      Serial.printf(", Rotate: %s\n", NowScheduledTask.sec_rotation ? "true" : "false");
     }
 
     Color.println();
