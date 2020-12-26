@@ -2,8 +2,8 @@
     "id": 1234,
     "name": "Task-1",
     "enable": true,
-    "iniDate": "2020-1-1T01:01:01",
-    "endDate": "2030-12-31T11:59:59",
+    "iniDate": "2020-1-1T17:58:01",
+    "endDate": "2020-12-31T12:59:59",
     "secuence_0": {
         "sec_index": 6,
         "sec_rgb": "f5510a",

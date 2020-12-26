@@ -25,6 +25,7 @@ class libRTC {
     void begin();
     void readRTC();
     String datetimeToString(DateTime dt);
+    String datetimeToString_ISO(DateTime);
     DateTime stringToDatetime(String DatetimeString);
     boolean setDatetime(String vDate, String vTime);
     void setDatetime(String nSeccion[], int parameterSize);
@@ -91,6 +92,20 @@ String libRTC::datetimeToString(DateTime dt) {
   String text = (String)dt.year(); text.concat("/");
   text.concat(dt.month()); text.concat("/");
   text.concat(dt.day()); text.concat(" ");
+  text.concat(dt.hour()); text.concat(":");
+  text.concat(dt.minute()); text.concat(":");
+  text.concat(dt.second());
+  return text;
+}
+
+/*
+   Tipo Fecha a String.
+   OK - 20/11/16
+*/
+String libRTC::datetimeToString_ISO(DateTime dt) {
+  String text = (String)dt.year(); text.concat("/");
+  text.concat(dt.month()); text.concat("/");
+  text.concat(dt.day()); text.concat("T");
   text.concat(dt.hour()); text.concat(":");
   text.concat(dt.minute()); text.concat(":");
   text.concat(dt.second());
@@ -294,17 +309,15 @@ float libRTC::getTemp() {
 }
 
 void libRTC::help() {
-  Serial.println("RTC - Help");
-  Serial.println("setDatetime\t - Establece fecha y hora.");
-  Serial.println("\t\t - Formato: SET_ALL,AAAA,MM,DD,hh,mm,ss");
-  Serial.println("\t\t - Formato: SET_DATE,AAAA,MM,DD");
-  Serial.println("\t\t - Formato: SET_TIME,hh,mm,ss");
-  Serial.println("getDatetime\t - Devuelve fecha y hora.");
-  Serial.println("getDate    \t - Devuelve fecha");
-  Serial.println("getTime    \t - Devuelve hora");
-  Serial.println("getTemp    \t - Devuelve temperatura");
-  Serial.println("help       \t - Manual de intrucciones.");
-  Serial.println();
+  Serial.printf("RTC - Help\nsetDatetime\t - Establece fecha y hora.\n");
+  Serial.printf("\t\t - Formato: SET_ALL,AAAA,MM,DD,hh,mm,ss\n");
+  Serial.printf("\t\t - Formato: SET_DATE,AAAA,MM,DD\n");
+  Serial.printf("\t\t - Formato: SET_TIME,hh,mm,ss\n");
+  Serial.printf("getDatetime\t - Devuelve fecha y hora.\n");
+  Serial.printf("getDate    \t - Devuelve fecha\n");
+  Serial.printf("getTime    \t - Devuelve hora\n");
+  Serial.printf("getTemp    \t - Devuelve temperatura\n");
+  Serial.printf("help       \t - Manual de intrucciones.\n");
 }
 
 void libRTC::menu(String command, String parameters) {

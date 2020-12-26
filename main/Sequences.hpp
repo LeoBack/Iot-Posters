@@ -4,6 +4,7 @@
 
 struct Execute_sec
 {
+  unsigned int id = 0;
   String name = "";               // Nombre de la secuencia.
   signed int array_IC[IC_NUMBER]; // Array donde se almacena el valor a escribir.
   byte index_IC = 0;              // IC seleccionado del array.
@@ -17,6 +18,7 @@ struct Execute_sec
 };
 
 struct NOW_scheduledTask {
+  unsigned int id = 0;
   unsigned int sec_select = 0;   // Secuencia seleccionada
   unsigned int sec_index = 1;    // Secuencia a ejecutar.
   String sec_Rgb = "000000";     // Color de toda la secuencia.
@@ -35,7 +37,7 @@ struct taskSchedulingSec {
 
 struct taskScheduling {
   unsigned int id = 0;
-  String name = "Task_name_default";
+  String name = "Taskname_default";
   boolean enable = true;
   DateTime iniDate = DateTime(2020, 1, 1);
   DateTime endDate = DateTime(2030, 12, 30, 23, 59, 59);
@@ -85,8 +87,7 @@ byte const nLadder[] = {
 };
 
 //---SETUP Programa--------------------------------------------------
-void setup_sec()
-{
+void setup_sec() {
   pinMode(pinData, OUTPUT);
   pinMode(pinClock, OUTPUT);
   pinMode(pinRegister, OUTPUT);
@@ -95,18 +96,14 @@ void setup_sec()
 
 //---Funciones-------------------------------------------------------
 
-// OK
+// OK - 20/12/24
 void print_debug() {
   if (DEBUG) {
-    Serial.print("#3 Sec.: "); Serial.print(Execute.name);
-    Serial.print(", Byte: "); Serial.print(Execute.index_Byte);
-    Serial.print(", Toggle: "); Serial.print(Execute.toggle);
-    Serial.print(", Value: ");
+    Serial.printf("#3 Sec.: %s, Byte: %d, Toggle: %d, Value: ", Execute.name.c_str(), Execute.index_Byte, Execute.toggle);
     for (int index_IC = 0; index_IC < IC_NUMBER; index_IC++) {
-      Serial.print("0x");
-      Serial.print(Execute.array_IC[index_IC], HEX);
-      if (index_IC < IC_NUMBER - 1)
-        Serial.print(" ");
+      Serial.printf("0x%2X ", Execute.array_IC[index_IC]);
+      //if (index_IC < IC_NUMBER - 1)
+      //  Serial.print(" ");
     }
     Serial.println("");
   }
@@ -128,7 +125,7 @@ void out_set_value(unsigned int value) {
 
 // OK
 byte out_clear() {
-  byte value = 0x00; //INV_POLARITY ? 0xFF : 0x00;
+  byte value = 0x00;
   for (int index_IC = 0; index_IC < IC_NUMBER; index_IC++)
     Execute.array_IC[index_IC] = value;
   return value;
@@ -136,7 +133,7 @@ byte out_clear() {
 
 // OK
 byte out_full() {
-  byte value = 0xFF; //INV_POLARITY ? 0x00 : 0xFF;
+  byte value = 0xFF;
   for (int index_IC = 0; index_IC < IC_NUMBER; index_IC++)
     Execute.array_IC[index_IC] = value;
   return value;
@@ -432,8 +429,7 @@ void sec_negative_ladder(boolean vPrint = false) {
 }
 
 // OK
-void sec_off(boolean vPrint = false)
-{
+void sec_off(boolean vPrint = false) {
   Execute.name = "Off";
 
   if (Execute.is_completed)
@@ -449,8 +445,7 @@ void sec_off(boolean vPrint = false)
 }
 
 // OK
-void sec_on(boolean vPrint = false)
-{
+void sec_on(boolean vPrint = false) {
   Execute.name = "On";
 
   if (Execute.is_completed)
@@ -502,9 +497,8 @@ boolean readProgramHeader(String vName, boolean vPrint = false) {
   pGrm.endDate = R.stringToDatetime(endDate);
 
   if (vPrint) {
-    Serial.println("--- Encabezados leidos ---");
-    Serial.printf("id= %d\n", pGrm.id);
-    Serial.printf("name= %s\n", pGrm.name.c_str());
+    Serial.println("------- Read header -------");
+    Serial.printf("[id= %d], name= %s\n", pGrm.id, pGrm.name.c_str());
     Serial.printf("enable= %s\n", (pGrm.enable ? "true" : "false"));
     Serial.printf("iniDate= %s\n", R.datetimeToString(pGrm.iniDate).c_str());
     Serial.printf("endDate= %s\n", R.datetimeToString(pGrm.endDate).c_str());
@@ -545,12 +539,12 @@ boolean readProgram(String vName, boolean vPrint = false) {
   pGrm.iniDate = R.stringToDatetime(iniDate);
   pGrm.endDate = R.stringToDatetime(endDate);
   for (int i = 0; i < MAX_SECUENCES; i++) {
-    String sec = "secuence_" + String(i);
-    const unsigned int sec_index = doc[sec]["sec_index"];
-    const char *sec_rgb = doc[sec]["sec_rgb"];
-    const unsigned int sec_millis = doc[sec]["sec_millis"];
-    const boolean sec_rotation = doc[sec]["sec_rotation"];
-    const unsigned int sec_repeat = doc[sec]["sec_repeat"];
+    String sec_read = "secuence_" + String(i);
+    const unsigned int sec_index = doc[sec_read]["sec_index"];
+    const char *sec_rgb = doc[sec_read]["sec_rgb"];
+    const unsigned int sec_millis = doc[sec_read]["sec_millis"];
+    const boolean sec_rotation = doc[sec_read]["sec_rotation"];
+    const unsigned int sec_repeat = doc[sec_read]["sec_repeat"];
     pGrm.id = id;
     pGrm.TaskSec[i].sec_index = sec_index;
     pGrm.TaskSec[i].sec_rgb = sec_rgb;
@@ -561,9 +555,8 @@ boolean readProgram(String vName, boolean vPrint = false) {
   ESP.wdtFeed();
 
   if (vPrint) {
-    Serial.println("--- Configuracion leida ---");
-    Serial.printf("id= %d\n", pGrm.id);
-    Serial.printf("name= %s\n", pGrm.name.c_str());
+    Serial.println("------- Read config -------");
+    Serial.printf("[id= %d], name= %s\n", pGrm.id, pGrm.name.c_str());
     Serial.printf("enable= %s\n", (pGrm.enable ? "true" : "false"));
     Serial.printf("iniDate= %s\n", R.datetimeToString(pGrm.iniDate).c_str());
     Serial.printf("endDate= %s\n", R.datetimeToString(pGrm.endDate).c_str());
@@ -573,7 +566,7 @@ boolean readProgram(String vName, boolean vPrint = false) {
       Serial.printf("sec_rgb= %s\n", pGrm.TaskSec[i].sec_rgb.c_str());
       Serial.printf("sec_millis= %d\n", pGrm.TaskSec[i].sec_millis);
       Serial.printf("sec_rotation= %s\n", (pGrm.TaskSec[i].sec_rotation ? "true" : "false"));
-      Serial.printf("sec_repeat= %d\n", pGrm.TaskSec[i].sec_repeat);
+      Serial.printf("sec_repeat n= %d\n", pGrm.TaskSec[i].sec_repeat);
     }
     Serial.println("---------------------------");
   }
@@ -644,26 +637,26 @@ taskScheduling FindScheduleFile(boolean vPrint = false) {
 
   Dir files = SPIFFS.openDir(DIR_PROGRAM);
 
-  Serial.print("Read files:\tNOW= ");
-  Serial.println(R.datetimeToString(NOW));
+  Serial.printf("Find schedule\tNOW= %s\n", R.datetimeToString(NOW).c_str());
 
-  while (files.next())
-  {
-    if (readProgram(files.fileName(), vPrint) && pGrm.enable)
-    {
+  while (files.next()) {
+    if (readProgram(files.fileName(), vPrint)) {
       countfile++;
 
-      boolean EnableTime = false;
-      boolean DisableTime = false;
+      if (!pGrm.enable) {
+        Serial.printf("--- # %d\nname= %s\t (disabled)", countfile, pGrm.name.c_str());
+        break;
+      }
+
+      boolean Time_enable = false;
+      boolean Time_disable = false;
 
       // Duracion de la Tarea
-      int duration = R.duration(pGrm.iniDate, pGrm.endDate);
-
+      int Task_duration = R.duration(pGrm.iniDate, pGrm.endDate);
       // Tiempo faltante para aplicar la Tarea
-      TimeSpan timeRunTask = timeProgram(pGrm.iniDate, pGrm.endDate, NOW);
-
-      // La Tarea es actual (Comparacion entre Fechas)
-      boolean EnableDate = (pGrm.iniDate <= NOW) && (pGrm.endDate >= NOW);
+      TimeSpan Missing_time = timeProgram(pGrm.iniDate, pGrm.endDate, NOW);
+      //La tarea es actual?
+      boolean Valid_date = (pGrm.iniDate <= NOW) && (pGrm.endDate >= NOW);
 
       // Time - Inicio de tarea
       DateTime vIniTime = DateTime(NOW.year(), NOW.month(), NOW.day(),
@@ -674,59 +667,49 @@ taskScheduling FindScheduleFile(boolean vPrint = false) {
                                    pGrm.endDate.hour(), pGrm.endDate.minute(), pGrm.endDate.second());
 
       // La Tarea continua al dia siguiente?
-      TimeSpan diff = vEndTime - vIniTime;
+      TimeSpan diff = vEndTime - vIniTime; 
       TimeSpan tsDiffEnable = vIniTime - NOW;
       TimeSpan tsDiffDisable = vEndTime - NOW;
 
-      if (diff.totalseconds() > 0)
-      {
-        // EnableTime (Compara horario) - Etapa I
-        EnableTime = EnableDate && tsDiffEnable.totalseconds() < 0;
-
-        // DisableTime (Compara horario) - Etapa I
-        DisableTime = EnableDate && tsDiffDisable.totalseconds() < 0;
+      //Date_enable = 2020/01/01 01:01:01 - 2020/12/31 17:59:59 = OK
+      //Date_enable = 2020/12/01 15:00:00 - 2020/12/01 01:00:00 = VER      
+      if (diff.totalseconds() >= 0) {
+        Serial.printf("TEST #0- (diff >= 0) = %d\t", diff.totalseconds());
+        Time_enable = Valid_date && tsDiffEnable.totalseconds() < 0;
+        Time_disable = Valid_date && tsDiffDisable.totalseconds() < 0;
       }
-      else
-      {
+      else {
         //--VER--------------------------------------------------------------------------
-        Serial.print("TEST #1- (diff < 0)\t"); Serial.println(diff.totalseconds());
-
         TimeSpan diffEndTime = NOW - vEndTime;
         TimeSpan diffIniTime = NOW - vIniTime;
+        
+        Serial.printf("TEST #1- (diff < 0) = %d\n", diff.totalseconds());
+        Serial.printf("now - vIniTime = diffIniTime\t");
+        Serial.printf("%s - %s = %d\n", R.datetimeToString(NOW).c_str(), R.datetimeToString(vIniTime).c_str(), diffIniTime.totalseconds());
+        Serial.printf("now - vEndTime = diffEndTime\t");
+        Serial.printf("%s - %s = %d\n", R.datetimeToString(NOW).c_str(), R.datetimeToString(vEndTime).c_str(), diffEndTime.totalseconds());
 
-        Serial.print("TEST #1.2- (now - vIniTime = diffIniTime)\t");
-        Serial.print(R.datetimeToString(NOW));
-        Serial.print(" - "); Serial.print(R.datetimeToString(vIniTime));
-        Serial.print(" = "); Serial.println(diffIniTime.totalseconds());
-
-        Serial.print("TEST #1.3- (now - vEndTime = diffEndTime)\t");
-        Serial.print(R.datetimeToString(NOW));
-        Serial.print(" - "); Serial.print(R.datetimeToString(vEndTime));
-        Serial.print(" = "); Serial.println(diffEndTime.totalseconds());
-
-        if (EnableDate && NOW >= diffIniTime.totalseconds() && NOW <= diffEndTime.totalseconds()) {
-          Serial.println("TEST #1.4- Entre ini y end");
-          EnableTime = false;
-          DisableTime = true;
+        if (Valid_date && NOW >= diffIniTime.totalseconds() && NOW <= diffEndTime.totalseconds()) {
+          Serial.println("TEST #1.2.1- Entre ini y end");
+          Time_enable = false;
+          Time_disable = true;
         }
         else {
-          Serial.println("TEST #1.4- No esta dentro de ini y end");
-          EnableTime = true;
-          DisableTime = false;
+          Serial.println("TEST #1.2.2- No esta dentro de ini y end");
+          Time_enable = true;
+          Time_disable = false;
         }
       }
 
-      // Imprimo
-      Serial.println("---");
-      Serial.printf("#%d %s\t", countfile, pGrm.name.c_str());
-      Serial.printf("[%s - %s]\n", R.datetimeToString(pGrm.iniDate).c_str(),R.datetimeToString(pGrm.endDate).c_str());
-      Serial.printf("Valid= %s\t", EnableDate ? "Yes" : "No");
-      Serial.printf("Period= %s\n", R.toStringTimeSpan(duration).c_str());
-      Serial.printf("%d & !%d=%d\t", EnableTime, DisableTime, (EnableTime & !DisableTime));
-      Serial.printf("Duration= %s\n", R.toStringTimeSpan(timeRunTask.totalseconds()).c_str());
-      Serial.printf("\t\tTime to run= %s\n", R.toStringTimeSpan(tsDiffEnable.totalseconds()).c_str());
+      Serial.printf("--- # %d\n", countfile);
+      Serial.printf("name= %s\t", pGrm.name.c_str());
+      Serial.printf("[%s - %s]\n", R.datetimeToString(pGrm.iniDate).c_str(), R.datetimeToString(pGrm.endDate).c_str());
+      Serial.printf("valid= %s\tduration= %s\n", (Valid_date ? "Yes" : "No"), R.toStringTimeSpan(Task_duration).c_str());
+      Serial.printf("%d & !%d=%d\t", Time_enable, Time_disable, (Time_enable & !Time_disable));
+      Serial.printf("period= %s\n", R.toStringTimeSpan(Missing_time.totalseconds()).c_str());
+      Serial.printf("\t\ttime to run= %s\n", R.toStringTimeSpan(tsDiffEnable.totalseconds()).c_str());
 
-      if (EnableTime & !DisableTime) {
+      if (Time_enable & !Time_disable) {
         if (pTemp.id == 0) {
           pTemp = pGrm;
           Serial.printf("TEST #2.1- Default= %s\n", pTemp.name.c_str());
@@ -882,7 +865,7 @@ long executeNextProgramming(taskScheduling pGrm, boolean vPrint = false) {
       float exec_percent = (now_progress * 100) / total_progress;
 
       Serial.println("---");
-      Serial.printf("#0 Progress:  %f, Logic denied: %s\n", exec_percent, INV_POLARITY == 1 ? "true" : "false");
+      Serial.printf("#0 Progress: %.1f%s\n", exec_percent, INV_POLARITY == 1 ? ", logic denied" : "");
       Serial.printf("#1 Task: %s, Sec_ID: %d", pGrm.name.c_str(), NowScheduledTask.sec_select);
       Serial.printf(", Item: %d/%d", NowScheduledTask.sec_index, maxSelect);
       Serial.printf(", Time: %dms", NowScheduledTask.sec_timeMillis);
