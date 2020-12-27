@@ -130,9 +130,9 @@ void libWiFi::wifi_AP(bool useStaticIP) {
   if (useStaticIP)
     WiFi.softAPConfig(ip, gateway, subnet);
 
-  Serial.printf("\nInitiated AP:\t%s", ssidAP);
-  Serial.printf("\nIP address:\t"); Serial.println(WiFi.softAPIP());
-  Serial.printf("\nMAC address:\t%s", WiFi.softAPmacAddress().c_str());
+  Serial.printf("Initiated AP:\t%s\n", ssidAP);
+  Serial.printf("IP address:\t"); Serial.println(WiFi.softAPIP());
+  Serial.printf("MAC address:\t%s\n", WiFi.softAPmacAddress().c_str());
 }
 
 boolean libWiFi::connectWiFi() {
@@ -149,7 +149,7 @@ boolean libWiFi::connectWiFi() {
           wifi_AP();
         }
       }
-      Serial.printf("press AP mode %ds remaining time\n", count);
+      Serial.printf("Press AP mode %ds remaining time\n", count);
       count--;
       digitalWrite(pSTATUS, LOW);
       ESP.wdtFeed();

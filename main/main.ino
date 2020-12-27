@@ -4,6 +4,7 @@
 //#include <LEAmDNS.h>
 //#include <LEAmDNS_lwIPdefs.h>
 //#include <LEAmDNS_Priv.h>
+#include <PubSubClient.h>
 #include <ESPAsyncWebServer.h>
 #include <ListLib.h>
 #include <FS.h>
@@ -45,8 +46,6 @@ void setup(void)
   Rtc.begin();
   File.begin();
 
-  setup_sec();
-
   //  obsD0.Distinct().Do([](int i) { updateGPIO("D0", i); });
   //  obsD5.Distinct().Do([](int i) { updateGPIO("D5", i); });
   //  obsD6.Distinct().Do([](int i) { updateGPIO("D6", i); });
@@ -60,6 +59,10 @@ void setup(void)
   Serial.printf("CPU Frequency: %u MHz\n", ESP.getCpuFreqMHz());
   Serial.printf("Reset reason: %s\n", ESP.getResetReason().c_str());
   Serial.println("------------------------------");
+
+
+  load_config();
+  setup_sec();
 
   Wifi.begin(config.wifi, LED_BUILTIN);
   ModeAp = Wifi.connectWiFi();
