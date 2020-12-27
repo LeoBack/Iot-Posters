@@ -54,14 +54,14 @@ ClientRequest clientResquest;
 Config config;
 
 void print_config() {
-  Serial.printf("ID: %d", config.id);
-  Serial.printf("Name: %s", config.name.c_str());
-  Serial.printf("ON: %s", config.on ? "True" : "false");
-  Serial.printf("Debug: %s", config.debug  ? "True" : "false");
-  Serial.printf("SSID: %s", config.wifi.ssid.c_str());
-  Serial.printf("Password: %s", config.wifi.password.c_str());
-  Serial.printf("Suscribe: %s", config.mqtt.sub.c_str());
-  Serial.printf("Publisher: %s", config.mqtt.pub.c_str());
+  Serial.printf("ID: %d\n", config.id);
+  Serial.printf("Name: %s\n", config.name.c_str());
+  Serial.printf("ON: %s\n", config.on ? "True" : "false");
+  Serial.printf("Debug: %s\n", config.debug  ? "True" : "false");
+  Serial.printf("WIFI SSID: %s\n", config.wifi.ssid.c_str());
+  Serial.printf("WIFI Password: %s\n", config.wifi.password.c_str());
+  Serial.printf("MQTT Suscribe: %s\n", config.mqtt.sub.c_str());
+  Serial.printf("MQTT Publisher: %s\n", config.mqtt.pub.c_str());
 }
 
 // Config

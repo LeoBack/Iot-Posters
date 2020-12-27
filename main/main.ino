@@ -44,7 +44,6 @@ void setup(void)
   
   Rtc.begin();
   File.begin();
-  Wifi.begin(config.wifi);
 
   setup_sec();
 
@@ -62,7 +61,7 @@ void setup(void)
   Serial.printf("Reset reason: %s\n", ESP.getResetReason().c_str());
   Serial.println("------------------------------");
 
-  Wifi.begin(LED_BUILTIN);
+  Wifi.begin(config.wifi, LED_BUILTIN);
   ModeAp = Wifi.connectWiFi();
   InitServer();
   InitWebSockets();

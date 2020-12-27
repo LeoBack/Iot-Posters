@@ -130,8 +130,9 @@ void libWiFi::wifi_AP(bool useStaticIP) {
   if (useStaticIP)
     WiFi.softAPConfig(ip, gateway, subnet);
 
-  Serial.printf("\nInitiated AP:\t%s", ssidAP.c_str());
-  Serial.printf("\nIP address:\t%s", WiFi.softAPIP().c_str());
+  Serial.printf("\nInitiated AP:\t%s", ssidAP);
+  Serial.printf("\nIP address:\t"); Serial.println(WiFi.softAPIP());
+  Serial.printf("\nMAC address:\t%s", WiFi.softAPmacAddress().c_str());
 }
 
 boolean libWiFi::connectWiFi() {
@@ -148,7 +149,7 @@ boolean libWiFi::connectWiFi() {
           wifi_AP();
         }
       }
-      Serial.printf("press AP mode %ds remaining time", count);
+      Serial.printf("press AP mode %ds remaining time\n", count);
       count--;
       digitalWrite(pSTATUS, LOW);
       ESP.wdtFeed();
@@ -202,10 +203,10 @@ void libWiFi::menu(String command, String parameters) {
         }
       }
     }
-    config_save();
+    save_config();
   }
   else if (command == "reload") {
-    if (libWiFi::load()) {
+/*    if (libWiFi::load()) {
       if (libWiFi::connectWiFi()) {
         if (libWiFi::wifi_STA())
           Serial.println("> Successful recharge completed.");
@@ -217,7 +218,7 @@ void libWiFi::menu(String command, String parameters) {
     }
     else
       Serial.println("> Reload configuration file read failure.");
-  }
+*/  }
   else if (command == "scan") {
     libWiFi::scanWiFi();
   }
