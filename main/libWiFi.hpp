@@ -6,13 +6,10 @@
 class libWiFi {
   private:
     int pSTATUS = 0;
+    ConfigWifi config_wifi;
   public:
-    String connectSsid;
-    String connectPassword;
-    void begin(int pin_STATUS);
+    void begin(ConfigWifi Config_wifi, int pin_STATUS);
     String scanWiFi();
-    boolean load();
-    boolean save(String ssid, String password);
     boolean wifi_STA(bool useStaticIP = false);
     void wifi_AP(bool useStaticIP = false);
     boolean connectWiFi();
@@ -20,7 +17,8 @@ class libWiFi {
     void menu(String command, String parameters);
 };
 
-void libWiFi::begin(int pin_STATUS) {
+void libWiFi::begin(ConfigWifi Config_wifi, int pin_STATUS) {
+  config_wifi = Config_wifi;
   pSTATUS = pin_STATUS;
   pinMode(pSTATUS, OUTPUT);
 }
@@ -54,82 +52,13 @@ String libWiFi::scanWiFi() {
   return response;
 }
 
-boolean libWiFi::load() {
-  File configFile = SPIFFS.open(wifiConfig, "r");
-  if (!configFile) {
-    Serial.println("Failed to open config file");
-    return false;
-  }
-
-  if (configFile.size() > 1024) {
-    Serial.println("Config file size is too large");
-    return false;
-  }
-
-  StaticJsonDocument<300> doc;
-  DeserializationError error = deserializeJson(doc, configFile);
-  if (error) {
-    Serial.println("Error deserializing the configuration file");
-    return false;
-  }
-
-  const char* ssid = doc["ssid"];
-  const char* password = doc["password"];
-  libWiFi::connectSsid = ssid;
-  libWiFi::connectPassword = password;
-
-#if DEBUG == 1
-  Serial.println("Configuracion Wifi leida:");
-  Serial.print("SSID: "); Serial.println(libWiFi::connectSsid);
-  Serial.print("Password: "); Serial.println(libWiFi::connectPassword);
-#endif
-
-  return true;
-}
-
-boolean libWiFi::save(String pSsid, String pPassword) {
-  pSsid.trim();
-  pPassword.trim();
-  libWiFi::connectSsid = pSsid;
-  libWiFi::connectPassword = pPassword;
-  /*
-    Serial.println(pSsid);
-    Serial.println(libWiFi::connectSsid);
-    Serial.println(pPassword);
-    Serial.println(libWiFi::connectPassword);
-  */
-  StaticJsonDocument<100> doc;
-  doc["ssid"] = libWiFi::connectSsid;
-  doc["password"] = libWiFi::connectPassword;
-
-  File configFile = SPIFFS.open(wifiConfig, "w");
-  if (!configFile) {
-    Serial.println("Error opening configuration file for writing");
-    return false;
-  }
-  serializeJson(doc, configFile);
-
-#if DEBUG == 1
-  Serial.println("Configuracion Wifi guardada:");
-  Serial.print("SSID: "); Serial.println(libWiFi::connectSsid);
-  Serial.print("Password: "); Serial.println(libWiFi::connectPassword);
-#endif
-
-  return true;
-}
-
 boolean libWiFi::wifi_STA(bool useStaticIP) {
   WiFi.mode(WIFI_STA);
   Serial.println("SET mode_STA");
 
   int _reconnect = 0;
-  String _ssid = ssid;
-  String _password = password;
-
-  if (libWiFi::load()) {
-    _ssid = libWiFi::connectSsid;
-    _password = libWiFi::connectPassword;
-  }
+  String _ssid = config_wifi.ssid
+  String _password = config_wifi.password;
 
   WiFi.begin(_ssid, _password);
 
@@ -201,9 +130,8 @@ void libWiFi::wifi_AP(bool useStaticIP) {
   if (useStaticIP)
     WiFi.softAPConfig(ip, gateway, subnet);
 
-  Serial.println("");
-  Serial.print("Initiated AP:\t"); Serial.println(ssidAP);
-  Serial.print("IP address:\t"); Serial.println(WiFi.softAPIP());
+  Serial.printf("\nInitiated AP:\t%s", ssidAP.c_str());
+  Serial.printf("\nIP address:\t%s", WiFi.softAPIP().c_str());
 }
 
 boolean libWiFi::connectWiFi() {
@@ -220,7 +148,7 @@ boolean libWiFi::connectWiFi() {
           wifi_AP();
         }
       }
-      Serial.print("press AP mode "); Serial.print(count); Serial.println("s remaining time");
+      Serial.printf("press AP mode %ds remaining time", count);
       count--;
       digitalWrite(pSTATUS, LOW);
       ESP.wdtFeed();
@@ -239,10 +167,10 @@ boolean libWiFi::connectWiFi() {
 
 void libWiFi::help() {
   Serial.println("WiFi - Help");
-  Serial.println("set   \t - Establece SSID y Password de una red wifi seleccionada.");
-  Serial.println("reload\t - Lee configuracion de los datos de wifi almacenado.");
-  Serial.println("scan  \t - Escaner de redes wifi.");
-  Serial.println("help  \t - Manual de intrucciones.");
+  Serial.println("set   \t- Establece SSID y Password de una red wifi seleccionada.");
+  Serial.println("reload\t- Lee configuracion de los datos de wifi almacenado.");
+  Serial.println("scan  \t- Escaner de redes wifi.");
+  Serial.println("help  \t- Manual de intrucciones.");
   Serial.println();
 }
 
@@ -257,14 +185,14 @@ void libWiFi::menu(String command, String parameters) {
       }
       else {
         if (isSSID == 0) {
-          Serial.print("> SSID= "); Serial.println(parameter);
-          libWiFi::connectSsid = parameter;
+          Serial.printf("> SSID= %s", parameter.c_str());
+          config_wifi.ssid = parameter;
           isSSID++;
           parameter = "";
         }
         else if (isSSID == 1) {
-          Serial.print("> Password= "); Serial.println(parameter);
-          libWiFi::connectPassword = parameter;
+          Serial.printf("> Password= %s", parameter.c_str());
+          config_wifi.password = parameter;
           isSSID++;
           parameter = "";
         }
@@ -274,7 +202,7 @@ void libWiFi::menu(String command, String parameters) {
         }
       }
     }
-    libWiFi::save(libWiFi::connectSsid, libWiFi::connectPassword);
+    config_save();
   }
   else if (command == "reload") {
     if (libWiFi::load()) {

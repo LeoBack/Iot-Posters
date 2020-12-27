@@ -42,9 +42,10 @@ void setup(void)
   timerRunSecuence.interval = INTERVAL_RUN_SECUENCE;
   timerCheckSecuence.interval = INTERVAL_CHECK_SECUENCE;
   
-  File.begin();
   Rtc.begin();
-  
+  File.begin();
+  Wifi.begin(config.wifi);
+
   setup_sec();
 
   //  obsD0.Distinct().Do([](int i) { updateGPIO("D0", i); });

@@ -1,0 +1,14 @@
+{
+    "id": 1,
+    "name": "Naranja-1",
+    "on": true,
+    "debug": false,
+    "wifi": {
+        "ssid": "BACK",
+        "password": "ot3079996"
+    },
+    "mqtt": {
+        "pub": "Cartel/Norte",
+        "sub": "Cartel/Norte/algo"
+    }
+}

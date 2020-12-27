@@ -50,9 +50,8 @@ const int attemptsToReconnect = 90;
    Directorio
 
 */
-const char* wifiConfig = "/config/wifi.json";
-const char* TEMP = "/system/temp.json";
-const char* DIR_PROGRAM = "/program/";
+const char* CONFIG = "/config.json";
+const char* DIR_PROGRAM = "/task/";
 
 /*
    Set cantidada de canales
