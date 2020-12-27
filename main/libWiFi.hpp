@@ -57,7 +57,7 @@ boolean libWiFi::wifi_STA(bool useStaticIP) {
   Serial.println("SET mode_STA");
 
   int _reconnect = 0;
-  String _ssid = config_wifi.ssid
+  String _ssid = config_wifi.ssid;
   String _password = config_wifi.password;
 
   WiFi.begin(_ssid, _password);

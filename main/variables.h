@@ -9,7 +9,7 @@ struct ConfigMqtt {
   String sub = "";
 };
 
-struct Config 
+struct Config {
   unsigned int id = 0;
   String name = "";
   boolean on = true;
@@ -59,7 +59,7 @@ void print_config() {
   Serial.printf("ON: %s", config.on ? "True" : "false");
   Serial.printf("Debug: %s", config.debug  ? "True" : "false");
   Serial.printf("SSID: %s", config.wifi.ssid.c_str());
-  Serial.printF("Password: %s", config.wifi.password.c_str());
+  Serial.printf("Password: %s", config.wifi.password.c_str());
   Serial.printf("Suscribe: %s", config.mqtt.sub.c_str());
   Serial.printf("Publisher: %s", config.mqtt.pub.c_str());
 }
