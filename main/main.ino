@@ -72,7 +72,7 @@ void setup(void)
   //ESP.wdtDisable();     // Desactivo WDG soft
   //ESP.wdtEnable(1000);  // Habilita WDG soft
 
-  //mqtt_begin();
+  mqtt_begin();
 }
 
 void loop(void)
@@ -148,7 +148,7 @@ void loop(void)
         // Executa
         timerRunSecuence.interval = executeNextProgramming(pSelect, true);
 
-        mqtt_publish();
+        //mqtt_publish();
       }
 
       timerCheckSecuence.currentMillis = millis();
