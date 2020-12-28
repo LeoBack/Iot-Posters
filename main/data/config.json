@@ -2,13 +2,14 @@
     "id": 1,
     "name": "Naranja-1",
     "on": true,
-    "debug": false,
+    "debug": true,
     "wifi": {
         "ssid": "BACK",
         "password": "ot3079996"
     },
     "mqtt": {
-        "pub": "Cartel/Norte",
-        "sub": "Cartel/Norte/algo"
+        "IP_server": "192.168.100.70",
+        "pub": "cartel/norte/status",
+        "sub": "cartel/norte/task"
     }
 }

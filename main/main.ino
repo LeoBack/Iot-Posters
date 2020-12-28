@@ -14,6 +14,7 @@
 #include "variables.h"
 #include "libFile.hpp"
 #include "libWiFi.hpp"
+#include "mqtt.hpp"
 #include "libRTC.hpp"
 #include "libColor.hpp"
 #include "Sequences.hpp"
@@ -42,7 +43,7 @@ void setup(void)
 
   timerRunSecuence.interval = INTERVAL_RUN_SECUENCE;
   timerCheckSecuence.interval = INTERVAL_CHECK_SECUENCE;
-  
+
   Rtc.begin();
   File.begin();
 
@@ -60,7 +61,6 @@ void setup(void)
   Serial.printf("Reset reason: %s\n", ESP.getResetReason().c_str());
   Serial.println("------------------------------");
 
-
   load_config();
   setup_sec();
 
@@ -71,6 +71,8 @@ void setup(void)
 
   //ESP.wdtDisable();     // Desactivo WDG soft
   //ESP.wdtEnable(1000);  // Habilita WDG soft
+
+  //mqtt_begin();
 }
 
 void loop(void)
@@ -145,6 +147,8 @@ void loop(void)
 
         // Executa
         timerRunSecuence.interval = executeNextProgramming(pSelect, true);
+
+        mqtt_publish();
       }
 
       timerCheckSecuence.currentMillis = millis();

@@ -5,7 +5,7 @@ struct ConfigWifi {
 };
 
 struct ConfigMqtt {
-  String server = "";
+  String IP_server = "";
   String pub = "";
   String sub = "";
 };
@@ -61,7 +61,7 @@ void print_config() {
   Serial.printf("Debug: %s\n", config.debug  ? "True" : "false");
   Serial.printf("WIFI SSID: %s\n", config.wifi.ssid.c_str());
   Serial.printf("WIFI Password: %s\n", config.wifi.password.c_str());
-  Serial.printf("MQTT Server: %s\n", config.mqtt.server.c_str());
+  Serial.printf("MQTT IP_server: %s\n", config.mqtt.IP_server.c_str());
   Serial.printf("MQTT Suscribe: %s\n", config.mqtt.sub.c_str());
   Serial.printf("MQTT Publisher: %s\n", config.mqtt.pub.c_str());
 }
@@ -100,10 +100,10 @@ boolean load_config() {
   config.wifi.ssid = ssid;
   config.wifi.password = password;
 
-  const char* server = doc["mqtt"]["server"];
-  const char* sub = doc["mqtt"]["ssid"];
-  const char* pub = doc["mqtt"]["password"];
-  config.mqtt.server = server;
+  const char* IP_server = doc["mqtt"]["IP_server"];
+  const char* sub = doc["mqtt"]["sub"];
+  const char* pub = doc["mqtt"]["pub"];
+  config.mqtt.IP_server = IP_server;
   config.mqtt.sub = sub;
   config.mqtt.pub = pub;
 
@@ -123,8 +123,8 @@ boolean save_config() {
   doc["debug"] = config.debug;
   doc["wifi"]["ssid"] = config.wifi.ssid;
   doc["wifi"]["password"] = config.wifi.password;
+  doc["mqtt"]["IP_server"] = config.mqtt.IP_server;  
   doc["mqtt"]["sub"] = config.mqtt.sub;
-  doc["mqtt"]["server"] = config.mqtt.server;
   doc["mqtt"]["pub"] = config.mqtt.pub;
 
   File configFile = SPIFFS.open(CONFIG, "w");
