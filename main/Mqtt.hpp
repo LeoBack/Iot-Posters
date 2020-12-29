@@ -13,16 +13,16 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print((char)payload[i]);
   Serial.println();
 
- /*
-  // Switch on the LED if an 1 was received as first character
-  if ((char)payload[0] == '1')
-    digitalWrite(BUILTIN_LED, LOW);   
-    // Turn the LED on (Note that LOW is the voltage level
-    // but actually the LED is on; this is because it is acive low on the ESP-01)
-  else
-    digitalWrite(BUILTIN_LED, HIGH);  
-    // Turn the LED off by making the voltage HIGH
-*/
+  /*
+    // Switch on the LED if an 1 was received as first character
+    if ((char)payload[0] == '1')
+     digitalWrite(BUILTIN_LED, LOW);
+     // Turn the LED on (Note that LOW is the voltage level
+     // but actually the LED is on; this is because it is acive low on the ESP-01)
+    else
+     digitalWrite(BUILTIN_LED, HIGH);
+     // Turn the LED off by making the voltage HIGH
+  */
 }
 
 void reconnect() {
@@ -43,24 +43,43 @@ void reconnect() {
 }
 
 void mqtt_begin() {
-  IPAddress Ip(192, 168, 100, 70);//(config.mqtt.IP_server);
+  IPAddress Ip(192, 168, 100, 26);//(config.mqtt.IP_server);
   client.setServer(Ip, 1883);
   client.setCallback(callback);
 }
 
 void mqtt_publish() {
- 
+
   if (!client.connected())
     reconnect();
 
   client.loop();
- 
+
   //unsigned long now = millis();
   //if (now - lastMsg > 2000) {
   //  lastMsg = now;
-    ++value;
-    snprintf (msg, MSG_BUFFER_SIZE, "hello world #%ld", value);
-    Serial.printf("Publish message: %s", msg);
-    client.publish(config.mqtt.pub.c_str(), msg);
+  ++value;
+  snprintf (msg, MSG_BUFFER_SIZE, "hello world #%ld", value);
+  Serial.printf("Publish message: %s\n", msg);
+  client.publish(config.mqtt.pub.c_str(), msg);
   //}
+}
+
+void mqtt_publish_status() {
+
+  if (!client.connected())
+    reconnect();
+
+  client.loop();
+
+  String json;
+  StaticJsonDocument<500> doc;
+  doc["id"] = config.id;
+  doc["name"] = config.name;
+  doc["on"] = config.on;
+  doc["debug"] = config.debug;
+  serializeJson(doc, json);
+
+  Serial.printf("Publish message: %s\n", json.c_str());
+  client.publish(config.mqtt.pub.c_str(), json.c_str());
 }

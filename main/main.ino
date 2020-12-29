@@ -94,8 +94,9 @@ void loop(void)
     delay(20);
     // Proceso array
     if (inputConsole.isRead) {
-      if (isDebug)
-        Serial.print("> Command input= "); Serial.println(inputConsole.readConsole);
+      if (config.debug)
+        Serial.printf("> Command input= %s\n", inputConsole.readConsole.c_str());
+        
       inputConsole.readConsole.trim();
       //inputConsole.readConsole.toLowerCase();
       inputConsole.module = inputConsole.readConsole.substring(0, inputConsole.readConsole.indexOf(" "));
@@ -108,10 +109,10 @@ void loop(void)
       inputConsole.parameters.trim();
       inputConsole.readConsole = "";
 
-      if (isDebug) {
-        Serial.print("Module= "); Serial.println(inputConsole.module);
-        Serial.print("Command= "); Serial.println(inputConsole.command);
-        Serial.print("Parameters= "); Serial.println(inputConsole.parameters);
+      if (config.debug) {
+        Serial.printf("Module= %s\n", inputConsole.module.c_str());
+        Serial.printf("Command= %s\n", inputConsole.command.c_str());
+        Serial.printf("Parameters= %s\n", inputConsole.parameters.c_str());
       }
 
       if (inputConsole.module == "file")
@@ -127,20 +128,24 @@ void loop(void)
         Rtc.menu(inputConsole.command, inputConsole.parameters);
       else if (inputConsole.module == "wifi")
         Wifi.menu(inputConsole.command, inputConsole.parameters);
-      else if (inputConsole.module == "debug")
-        isDebug = !isDebug;
-      else if (inputConsole.module == "off")
-        on_off = 0;
-      else if (inputConsole.module == "on")
-        on_off = 1;
-      //      else if (inputConsole.module == "pause")
-      //        isRun = PAUSE;
+      else if (inputConsole.module == "debug") {
+        config.debug = !config.debug;
+        save_config();
+      }
+      else if (inputConsole.module == "off") {
+        on_off = false;
+        save_config();
+      }
+      else if (inputConsole.module == "on") {
+        on_off = true;
+        save_config();
+      }
       else
         Serial.println("Module no valid");
       inputConsole.isRead = false;
     }
 
-    if (on_off == 1) {
+    if (on_off) {
       timerRunSecuence.currentMillis = millis();
       if (timerRunSecuence.currentMillis - timerRunSecuence.previousMillis >= timerRunSecuence.interval) {
         timerRunSecuence.previousMillis = timerRunSecuence.currentMillis;
@@ -149,6 +154,7 @@ void loop(void)
         timerRunSecuence.interval = executeNextProgramming(pSelect, true);
 
         //mqtt_publish();
+        mqtt_publish_status();
       }
 
       timerCheckSecuence.currentMillis = millis();

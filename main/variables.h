@@ -1,4 +1,4 @@
-//enum statusRun { ON, OFF, PAUSE };
+
 struct ConfigWifi {
   String ssid = "";
   String password = "";
@@ -41,13 +41,11 @@ struct ClientRequest {
 };
 
 
-boolean isDebug = false;
 boolean ModeAp = false;
-byte on_off = 1;
-byte on_off_temp = 1;
+boolean on_off = true;
+boolean on_off_temp = true;
 String run_sec_name = "none";
 
-//statusRun isRun = ON;
 InputConsole inputConsole;
 Timer timerRunSecuence;
 Timer timerCheckSecuence;
