@@ -6,8 +6,13 @@ struct ConfigWifi {
 
 struct ConfigMqtt {
   String IP_server = "";
-  String pub = "";
-  String sub = "";
+  String sub_on = ""; 
+  String sub_debug = "";
+  String pub_status = "";
+  String sub_task = "";
+  String pub_task = "";
+  String sub_tasklist = "";
+  String pub_tasklist = "";
 };
 
 struct Config {
@@ -43,12 +48,14 @@ struct ClientRequest {
 
 boolean ModeAp = false;
 boolean on_off = true;
-boolean on_off_temp = true;
+boolean debug = true;
 String run_sec_name = "none";
+boolean mqtt_conn = false; 
 
 InputConsole inputConsole;
 Timer timerRunSecuence;
 Timer timerCheckSecuence;
+Timer timerMqtt;
 ClientRequest clientResquest;
 Config config;
 
@@ -60,8 +67,13 @@ void print_config() {
   Serial.printf("WIFI SSID: %s\n", config.wifi.ssid.c_str());
   Serial.printf("WIFI Password: %s\n", config.wifi.password.c_str());
   Serial.printf("MQTT IP_server: %s\n", config.mqtt.IP_server.c_str());
-  Serial.printf("MQTT Suscribe: %s\n", config.mqtt.sub.c_str());
-  Serial.printf("MQTT Publisher: %s\n", config.mqtt.pub.c_str());
+  Serial.printf("MQTT sub_on: %s\n", config.mqtt.sub_on.c_str());
+  Serial.printf("MQTT sub_debug: %s\n", config.mqtt.sub_debug.c_str());
+  Serial.printf("MQTT pub_status: %s\n", config.mqtt.pub_status.c_str());
+  Serial.printf("MQTT sub_task: %s\n", config.mqtt.sub_task.c_str());
+  Serial.printf("MQTT pub_task: %s\n", config.mqtt.pub_task.c_str());
+  Serial.printf("MQTT sub_tasklist: %s\n", config.mqtt.sub_tasklist.c_str());
+  Serial.printf("MQTT pub_tasklist: %s\n", config.mqtt.pub_tasklist.c_str());
 }
 
 // Config
@@ -77,7 +89,7 @@ boolean load_config() {
     return false;
   }
 
-  StaticJsonDocument<600> doc;
+  StaticJsonDocument<650> doc;
   DeserializationError error = deserializeJson(doc, configFile);
   if (error) {
     Serial.println("Error deserializing the configuration file");
@@ -99,11 +111,21 @@ boolean load_config() {
   config.wifi.password = password;
 
   const char* IP_server = doc["mqtt"]["IP_server"];
-  const char* sub = doc["mqtt"]["sub"];
-  const char* pub = doc["mqtt"]["pub"];
+  const char* sub_on = doc["mqtt"]["sub_on"];
+  const char* sub_debug = doc["mqtt"]["sub_debug"];
+  const char* pub_status = doc["mqtt"]["pub_status"];
+  const char* sub_task = doc["mqtt"]["sub_task"];
+  const char* pub_task = doc["mqtt"]["pub_task"];
+  const char* sub_tasklist = doc["mqtt"]["sub_tasklist"];
+  const char* pub_tasklist = doc["mqtt"]["pub_tasklist"];
   config.mqtt.IP_server = IP_server;
-  config.mqtt.sub = sub;
-  config.mqtt.pub = pub;
+  config.mqtt.sub_on = sub_on;
+  config.mqtt.sub_debug = sub_debug;
+  config.mqtt.pub_status = pub_status;
+  config.mqtt.sub_task = sub_task;
+  config.mqtt.pub_task = pub_task;
+  config.mqtt.sub_tasklist = sub_tasklist;
+  config.mqtt.pub_tasklist = pub_tasklist;
 
   if (config.debug) {
     Serial.println("Load config ---");
@@ -114,7 +136,7 @@ boolean load_config() {
 }
 
 boolean save_config() {
-  StaticJsonDocument<500> doc;
+  StaticJsonDocument<550> doc;
   doc["id"] = config.id;
   doc["name"] = config.name;
   doc["on"] = config.on;
@@ -122,8 +144,13 @@ boolean save_config() {
   doc["wifi"]["ssid"] = config.wifi.ssid;
   doc["wifi"]["password"] = config.wifi.password;
   doc["mqtt"]["IP_server"] = config.mqtt.IP_server;  
-  doc["mqtt"]["sub"] = config.mqtt.sub;
-  doc["mqtt"]["pub"] = config.mqtt.pub;
+  doc["mqtt"]["sub_on"] = config.mqtt.sub_on;
+  doc["mqtt"]["sub_debug"] = config.mqtt.sub_debug;
+  doc["mqtt"]["pub_status"] = config.mqtt.pub_status;
+  doc["mqtt"]["sub_task"] = config.mqtt.sub_task;
+  doc["mqtt"]["pub_task"] = config.mqtt.pub_task;
+  doc["mqtt"]["sub_tasklist"] = config.mqtt.sub_tasklist;
+  doc["mqtt"]["pub_tasklist"] = config.mqtt.pub_tasklist;
 
   File configFile = SPIFFS.open(CONFIG, "w");
   if (!configFile) {

@@ -31,6 +31,7 @@ const int MAX_SECUENCES = 4;
 */
 const unsigned long INTERVAL_RUN_SECUENCE = 10000;
 const unsigned long INTERVAL_CHECK_SECUENCE = 10000;
+const unsigned long INTERVAL_MQTT = 5000;
 
 /*
    Configuracion WIFI

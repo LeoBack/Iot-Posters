@@ -27,8 +27,9 @@
 libRTC Rtc;
 libFile File;
 libWiFi Wifi;
-
 taskScheduling pSelect;
+
+bool mqtt_refresh = false;
 
 // Para notificar cambios desde el servidor al cliente
 //auto obsD0 = Reactive::FromDigitalInput(D0);
@@ -43,6 +44,7 @@ void setup(void)
 
   timerRunSecuence.interval = INTERVAL_RUN_SECUENCE;
   timerCheckSecuence.interval = INTERVAL_CHECK_SECUENCE;
+  timerMqtt.interval = 5000;
 
   Rtc.begin();
   File.begin();
@@ -73,6 +75,7 @@ void setup(void)
   //ESP.wdtEnable(1000);  // Habilita WDG soft
 
   mqtt_begin();
+  mqtt_conn = mqtt_connect();
 }
 
 void loop(void)
@@ -81,6 +84,7 @@ void loop(void)
   //  obsD5.Next();
   //  obsD6.Next();
   //  obsD7.Next();
+  mqtt_client.loop();
 
   if (!ModeAp) {
 
@@ -96,7 +100,7 @@ void loop(void)
     if (inputConsole.isRead) {
       if (config.debug)
         Serial.printf("> Command input= %s\n", inputConsole.readConsole.c_str());
-        
+
       inputConsole.readConsole.trim();
       //inputConsole.readConsole.toLowerCase();
       inputConsole.module = inputConsole.readConsole.substring(0, inputConsole.readConsole.indexOf(" "));
@@ -128,35 +132,28 @@ void loop(void)
         Rtc.menu(inputConsole.command, inputConsole.parameters);
       else if (inputConsole.module == "wifi")
         Wifi.menu(inputConsole.command, inputConsole.parameters);
-      else if (inputConsole.module == "debug") {
-        config.debug = !config.debug;
-        save_config();
-      }
-      else if (inputConsole.module == "off") {
+      else if (inputConsole.module == "debug")
+        debug = !debug;
+      else if (inputConsole.module == "off")
         on_off = false;
-        save_config();
-      }
-      else if (inputConsole.module == "on") {
+      else if (inputConsole.module == "on")
         on_off = true;
-        save_config();
-      }
       else
         Serial.println("Module no valid");
       inputConsole.isRead = false;
     }
 
     if (on_off) {
+      // Selecciona taera a ejecutar
       timerRunSecuence.currentMillis = millis();
       if (timerRunSecuence.currentMillis - timerRunSecuence.previousMillis >= timerRunSecuence.interval) {
         timerRunSecuence.previousMillis = timerRunSecuence.currentMillis;
 
         // Executa
         timerRunSecuence.interval = executeNextProgramming(pSelect, true);
-
-        //mqtt_publish();
-        mqtt_publish_status();
       }
-
+      
+      // Ejecuta secuencia de tarea actual
       timerCheckSecuence.currentMillis = millis();
       if (timerCheckSecuence.currentMillis - timerCheckSecuence.previousMillis >= timerCheckSecuence.interval) {
         timerCheckSecuence.previousMillis = timerCheckSecuence.currentMillis;
@@ -166,26 +163,40 @@ void loop(void)
         run_sec_name = pSelect.name;
       }
     }
-    //    else if (isRun == PAUSE) {
-    //      sec_pause();
-    //    }
     else {
       sec_reset();
     }
+    
+    //
+    timerMqtt.currentMillis = millis();
+    if (timerMqtt.currentMillis - timerMqtt.previousMillis >= timerMqtt.interval) {
+      timerMqtt.previousMillis = timerMqtt.currentMillis;
 
-    if (clientResquest.isUp) {
-      //writeMain(String(isRun), pSelect.name);
-      //detailTask("Blue");
+      if (!mqtt_conn) {
+        mqtt_conn = mqtt_connect();
+      } else {
+        mqtt_publish_status(run_sec_name);
+      }
 
-      clientResquest.isUp = false;
     }
   }
   else {
     //Serial.println("RUN Mode AP");
   }
 
-  if (on_off_temp != on_off) {
-    on_off_temp = on_off;
-    result_on_off(on_off_temp);
+  if (config.on != on_off) {
+    config.on = on_off;
+    mqtt_refresh = true;
+  }
+
+  if (config.debug != debug) {
+    config.debug = debug;
+    mqtt_refresh = true;
+  }
+
+  if (mqtt_refresh){
+    save_config();
+    result_on_off(config.on);
+    mqtt_refresh = false;
   }
 }

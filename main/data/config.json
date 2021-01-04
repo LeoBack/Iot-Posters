@@ -8,8 +8,13 @@
         "password": "ot3079996"
     },
     "mqtt": {
-        "IP_server": "192.168.100.70",
-        "pub": "cartel/norte/status",
-        "sub": "cartel/norte/task"
+        "IP_server": "192.168.100.26",
+        "sub_on": "cartel/Naranja-1/on/set",
+        "sub_debug": "cartel/Naranja-1/debug/set",
+        "pub_status": "cartel/Naranja-1/status/get",
+        "sub_task": "cartel/Naranja-1/task/set",
+        "pub_task": "cartel/Naranja-1/task/get",
+        "sub_tasklist": "cartel/Naranja-1/tasklist/set",
+        "pub_tasklist": "cartel/Naranja-1/tasklist/get"
     }
 }
