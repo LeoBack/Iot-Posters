@@ -25,13 +25,20 @@ void callback(char* topic, byte* payload, unsigned int length) {
 }
 
 void mqtt_begin() {
-  //IPAddress Ip;
   Serial.printf("Ip: %s", config.mqtt.IP_server.c_str());
+  //IPAddress Ip;  
   //if (Ip.fromString(config.mqtt.IP_server)) {
   //  mqtt_client.setServer(Ip, 1883);
   //  mqtt_client.setCallback(callback);
   //}
-  IPAddress Ip(192, 168, 100, 26);
+
+  //IPAddress Ip(192, 168, 100, 26);
+  IPAddress Ip;
+  if (Ip.fromString(config.mqtt.IP_server))
+    Serial.println("Ip.fromString True");
+  else
+      Serial.println("Ip.fromString False");
+      
   mqtt_client.setServer(Ip, 1883);
   mqtt_client.setCallback(callback);
 }
@@ -71,6 +78,9 @@ boolean mqtt_connect() {
 
 void mqtt_publish_status(String sec_name) {
   mqtt_client.loop();
+  
+  RTC_DS3231 rtc;
+  float temp = rtc.getTemperature();
 
   String json;
   StaticJsonDocument<500> doc;
@@ -79,6 +89,7 @@ void mqtt_publish_status(String sec_name) {
   doc["on"] = config.on;
   doc["debug"] = config.debug;
   doc["sec_name"] = sec_name;
+  doc["temp"] = temp;
   serializeJson(doc, json);
 
   Serial.printf("Publish message: %s\n", json.c_str());

@@ -98,7 +98,7 @@ void setup_sec() {
 
 // OK - 20/12/24
 void print_debug() {
-  if (DEBUG) {
+  if (config.debug) {
     Serial.printf("#3 Sec.: %s, Byte: %d, Toggle: %d, Value: ", Execute.name.c_str(), Execute.index_Byte, Execute.toggle);
     for (int index_IC = 0; index_IC < IC_NUMBER; index_IC++) {
       Serial.printf("0x%2X ", Execute.array_IC[index_IC]);
@@ -859,7 +859,7 @@ long executeNextProgramming(taskScheduling pGrm, boolean vPrint = false) {
     Color.Rgb = NowScheduledTask.sec_Rgb;
     Execute.rotation = NowScheduledTask.sec_rotation;
 
-    if (DEBUG) {
+    if (config.debug) {
       float total_progress = maxSelect * NowScheduledTask.sec_repeat;
       float now_progress = NowScheduledTask.sec_index * (Execute.repeat_counter + 1);
       float exec_percent = (now_progress * 100) / total_progress;

@@ -302,9 +302,7 @@ int libRTC::getTime(eTime seccion) {
 
 float libRTC::getTemp() {
   float temp = rtc.getTemperature();
-  Serial.print("Temperatura: ");
-  Serial.print(temp);
-  Serial.println(" C");
+  Serial.printf("Temperatura: %d C",temp);
   return temp;
 }
 

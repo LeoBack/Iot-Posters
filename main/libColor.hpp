@@ -69,8 +69,8 @@ void libColor::println() {
     analogWrite(pBlue, map(blue, 0, 254, 0, 1024));
   }
 
-  if (DEBUG) {
-    Serial.print("#2 RGB: "); Serial.println(Rgb);
+  if (config.debug) {
+    Serial.printf("#2 RGB: %s", Rgb.c_str());
   }
 }
 
